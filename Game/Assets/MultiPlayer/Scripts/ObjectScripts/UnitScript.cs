@@ -14,21 +14,31 @@ public class UnitScript : NetworkBehaviour
     // for the player+camera to pivot around
     GameObject _playerPivot;
 
-    // Unit stats
-    private int _unitModel;
-    private bool _unitCanClimbWalls;
-    private int[] _unitCombatStats;
+    private Vector3 _unitID;
     private Vector3 _startingWorldLoc;
     private int _playerControllerId;
     private NetworkInstanceId _netID;
     private Vector3 _nodeIDUnitIsOn;
     public CubeLocationScript _cubeUnitIsOn;
-
-
     private int _pathNodeCount;
 
+    ////////////////////////////////////////////////
 
-    UnitStruct _unitData;
+    // Unit stats
+    private UnitStruct _unitData;
+    private int _unitModel;
+    private bool _unitCanClimbWalls;
+    private int[] _unitCombatStats;
+
+    ////////////////////////////////////////////////
+
+    public Vector3 UnitID
+    {
+        get { return _unitID; }
+        set { _unitID = value; }
+    }
+
+    ////////////////////////////////////////////////
 
     public int UnitModel
     {
@@ -48,12 +58,6 @@ public class UnitScript : NetworkBehaviour
         set { _unitCombatStats = value; }
     }
 
-    public Vector3 UnitStartingWorldLoc
-    {
-        get { return _startingWorldLoc; }
-        set { _startingWorldLoc = value; }
-    }
-
     public CubeLocationScript CubeUnitIsOn
     {
         get { return _cubeUnitIsOn; }
@@ -64,12 +68,6 @@ public class UnitScript : NetworkBehaviour
     {
         get { return _playerControllerId; }
         set { _playerControllerId = value; }
-    }
-
-    public NetworkInstanceId NetID
-    {
-        get { return _netID; }
-        set { _netID = value; }
     }
 
     public UnitStruct UnitData
@@ -84,10 +82,10 @@ public class UnitScript : NetworkBehaviour
         set { _playerPivot = value; }
     }
 
-    public Vector3 NodeID_UnitIsOn
+    public bool UnitAcive
     {
-        get { return _nodeIDUnitIsOn; }
-        set { _nodeIDUnitIsOn = value; }
+        get { return _unitActive; }
+        set { _unitActive = value; }
     }
 
     ////////////////////////////////////////////////
@@ -153,33 +151,6 @@ public class UnitScript : NetworkBehaviour
     }
 
 
-    void OnMouseDown()
-    {
-        if (PlayerControllerID == PlayerManager.PlayerID)
-        {
-            if (!_unitActive)
-            {
-                ActivateUnit();
-                UnitsManager.SetUnitActive(true, PlayerControllerID, (int)NetID.Value);
-                UnitsManager.AssignCameraToActiveUnit();
-            }
-        }
-	}
-
-	void OnMouseOver() {
-		if (!_unitActive)
-        {
-			PanelPieceChangeColor ("Green");
-		}
-	}
-	void OnMouseExit() {
-		if (!_unitActive)
-        {
-			PanelPieceChangeColor ("White");
-		}
-	}
-
-
     public void AssignPathFindingNodes(List<CubeLocationScript> nodes)
     {
         ClearPathFindingNodes();
@@ -201,7 +172,7 @@ public class UnitScript : NetworkBehaviour
     {
         if (_pathNodeCount < _pathFindingNodes.Count)
         {
-            Vector3 vect = _pathFindingNodes[_pathNodeCount].CubeStaticLocVector;
+            Vector3 vect = _pathFindingNodes[_pathNodeCount].CubeID;
             CubeLocationScript script = LocationManager.GetLocationScript_CLIENT(vect);
             CubeUnitIsOn = script;
         }

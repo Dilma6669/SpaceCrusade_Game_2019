@@ -63,11 +63,5 @@ public class GameManager : MonoBehaviour {
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    public static void StartGame(Vector3 worldStartLoc)
-    {
-        Debug.Log(" ::::::::::::::::: START GAME :::::::::::::::::: ");
-        UnitsManager.LoadPlayersUnits(worldStartLoc);
-    }
-
 }
 

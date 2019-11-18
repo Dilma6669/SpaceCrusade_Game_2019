@@ -37,20 +37,18 @@ public class WorldBuilder : MonoBehaviour
 
     public static void BuildWorldNodes()
     {
-        //NetWorkManager.NetworkAgent.CmdTellServerToSpawnNetworkNodeContainer(Vector3Int.zero);
-
-        List<Vector3Int> worldVects;
+        List<Vector3> worldVects;
         //Dictionary<WorldNode, List<MapNode>> worldAndWrapperNodes;
         Dictionary<WorldNode, List<ConnectorNode>> worldAndconnectorNodes;
-        Dictionary<WorldNode, List<KeyValuePair<Vector3Int, int>>> connectorVectsAndRotations;
+        Dictionary<WorldNode, List<KeyValuePair<Vector3, int>>> connectorVectsAndRotations;
 
-        List<List<Vector3Int>> container = WorldNodeBuilder.GetWorld_Outer_DockingVects();
+        List<List<Vector3>> container = WorldNodeBuilder.GetWorld_Outer_DockingVects();
         worldVects = container[0];
 
         WorldNodeBuilder.CreateWorldNodes(worldVects);
         List<WorldNode> worldNodes = WorldNodeBuilder.GetWorldNodes();
         WorldNodeBuilder.GetWorldNodeNeighbours();
-        MapNodeBuilder.CreateMapNodes(worldNodes, false, Vector3Int.zero);
+        MapNodeBuilder.CreateMapNodes(worldNodes, false, Vector3.zero);
 
         connectorVectsAndRotations = ConnectorNodeBuilder.GetConnectorVects(worldNodes);
         worldAndconnectorNodes = ConnectorNodeBuilder.CreateConnectorNodes(connectorVectsAndRotations);
@@ -85,12 +83,13 @@ public class WorldBuilder : MonoBehaviour
 
     private static void AttachMapsToWorldNode(WorldNode worldNode)
     {
+        Debug.Log("fuck wtf AttachMapsToWorldNode");
         int mapCount = 0;
         foreach (MapNode mapNode in worldNode.mapNodes)
         {
             mapNode.entrance = true;
             
-            GridBuilder.BuildLocationGrid(mapNode.NodeLocation);
+            //GridBuilder.BuildLocationGrid(mapNode.NodeLocation);
             MapPieceBuilder.SetWorldNodeNeighboursForDock(worldNode.neighbours); // for the ship docks
             MapPieceBuilder.AttachMapPieceToNode(mapNode);
             MapPieceBuilder.SetPanelsNeighbours();
@@ -98,14 +97,12 @@ public class WorldBuilder : MonoBehaviour
             //mapNode.mapVentData = MapPieceBuilder.MapVentData;
             mapCount++;
         }
-
-        GameManager.StartGame(worldNode.NodeLocation); // <<<<<< start the fucking game bitch
     }
 
 
     private static void AttachMapToMapNode(MapNode mapNode)
     {
-        GridBuilder.BuildLocationGrid(mapNode.NodeLocation);
+        //GridBuilder.BuildLocationGrid(mapNode.NodeLocation);
         MapPieceBuilder.AttachMapPieceToNode(mapNode);
         MapPieceBuilder.SetPanelsNeighbours();
         //mapNode.RemoveDoorPanels();
@@ -116,7 +113,7 @@ public class WorldBuilder : MonoBehaviour
 
     private static void AttachMapToConnectorNode(ConnectorNode connectNode)
     {
-        GridBuilder.BuildLocationGrid(connectNode.NodeLocation);
+        //GridBuilder.BuildLocationGrid(connectNode.NodeLocation);
         MapPieceBuilder.AttachMapPieceToNode(connectNode);
         MapPieceBuilder.SetPanelsNeighbours();
         //connectNode.mapFloorData = _mapPieceBuilder.GetMapFloorData();

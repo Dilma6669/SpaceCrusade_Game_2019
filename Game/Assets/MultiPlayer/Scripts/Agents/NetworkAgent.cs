@@ -2,13 +2,12 @@
 using UnityEngine;
 using UnityEngine.Networking;
 
+
 public class NetworkAgent : NetworkBehaviour
 {
     /////////////////////////////////////////////////////
 
-    Dictionary<NetworkInstanceId, GameObject> network_Client_Objects;
-    Dictionary<Vector3, GameObject> network_Node_Containers;
-    Dictionary<NetworkInstanceId, GameObject> network_Unit_Objects;
+    SyncedVars _syncedVars = null;
 
     public bool _isLocalPlayer = false;
 
@@ -18,9 +17,12 @@ public class NetworkAgent : NetworkBehaviour
     // Use this for initialization
     void Awake()
     {
-        network_Client_Objects = new Dictionary<NetworkInstanceId, GameObject>();
-        network_Node_Containers = new Dictionary<Vector3, GameObject>();
-        network_Unit_Objects = new Dictionary<NetworkInstanceId, GameObject>();
+        if (!isServer) return;
+
+        if (!isLocalPlayer) return;
+        _isLocalPlayer = true;
+
+        PlayerManager.NetworkAgent = this;
     }
 
     // Need this Start()
@@ -28,16 +30,34 @@ public class NetworkAgent : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
         _isLocalPlayer = true;
+
+        PlayerManager.NetworkAgent = this;
     }
 
     /////////////////////////////////////////
-    // HERLPER FUNCIONS:
+    // HELPER FUNCIONS:
     /////////////////////////////////////////
 
     private NetworkConnection TargetSpecificClient(NetworkInstanceId clientNetID)
     {
-        return network_Client_Objects[clientNetID].GetComponent<NetworkIdentity>().connectionToClient;
+        return ClientScene.FindLocalObject(clientNetID).GetComponent<NetworkIdentity>().connectionToClient;
     }
+
+
+    private NetworkInstanceId GetNetworkObjectInstanceID(GameObject networkNode)
+    {
+        return networkNode.GetComponent<NetworkIdentity>().netId;
+    }
+
+    private void CheckSyncVars()
+    {
+        if (_syncedVars == null)
+        {
+            _syncedVars = GameObject.Find("SyncedVars").GetComponent<SyncedVars>(); // needs to be here, function runs before awake
+        }
+        if (_syncedVars == null) { Debug.LogError("We got a problem here"); }
+    }
+
 
 
     /////////////////////////////////////////
@@ -45,13 +65,9 @@ public class NetworkAgent : NetworkBehaviour
     /////////////////////////////////////////
 
     [Command]
-    public void CmdAddPlayerToSession(NetworkInstanceId clientID)
+    public void CmdAddPlayerToSession(NetworkInstanceId clientNetID)
     {
-        Start();
-        network_Client_Objects.Add(clientID, ClientScene.FindLocalObject(clientID));
-
-        SyncedVars _syncedVars = GameObject.Find("SyncedVars").GetComponent<SyncedVars>(); // needs to be here, function runs before awake
-        if (_syncedVars == null) { Debug.LogError("We got a problem here"); }
+        CheckSyncVars();
 
         RpcUpdatePlayerCountOnClient(_syncedVars.PlayerCount + 1);
     }
@@ -62,228 +78,203 @@ public class NetworkAgent : NetworkBehaviour
         GetComponent<PlayerAgent>().UpdatePlayerCount(count);
     }
 
+
+
+
+
     /////////////////////////////////////////
-    // TELL SERVER: CREATE NETWORK NODE CONTAINER + ASSIGN LINK TO CLIENTS WORLD NODE
+    // TELL SERVER: CREATE NETWORK NODE FOR WORLD NODE (SHIP TO MOVE TOWARDS)
     /////////////////////////////////////////
 
     [Command]
-    public void CmdTellServerToSpawnNetworkNodeContainer(Vector3 nodeLoc_and_ID)
+    public void CmdTellServerToInitializeLists()
+    {
+        CheckSyncVars();
+    }
+
+    [Command]
+    public void CmdTellServerToSpawnPlayersShip(NetworkInstanceId clientNetID, Vector3 loc, Vector3 rot, int playerID) // this player ID is dumb and needs the player ship info (thats all its here for) to be fed in here rather than pulled from a script on the clients machines, beacuse that cant happen if people are joining games on the fly
     {
         if (!isServer) return;
 
-        Transform parent = WorldManager._NetworkContainer.transform;
+        CheckSyncVars();
 
-        GameObject prefab = WorldBuilder._nodeBuilder.GetNetworkNodeContainerPrefab();
-        GameObject networkNode = Instantiate(prefab, parent, false);
-        NetworkServer.Spawn(networkNode);
+        NetworkNodeStruct nodeStruct = new NetworkNodeStruct()
+        {
+            NodeID = loc,
+            StructIndex = _syncedVars._network_Ships_Indexs.Count,
+            ClientNetID = clientNetID,
+            PlayerID = playerID,
+            CurrLoc = loc,
+            CurrRot = rot
+        };
 
-        network_Node_Containers.Add(nodeLoc_and_ID, networkNode);
-        LocationManager.SetNetworkNodeContainerScript_SERVER(nodeLoc_and_ID, networkNode.GetComponent<NetworkNodeContainer>());
+        // tell all clients to load new ship
+        RpcTellAllClientsToSpawnPlayerShip(nodeStruct, playerID);
 
-        networkNode.transform.SetParent(parent);
-        networkNode.transform.position = nodeLoc_and_ID;
+        // now load old SHIPS into this client
+        foreach (NetworkNodeStruct node in _syncedVars._network_Ships_Container)
+        {
+            NetworkConnection netConnect = TargetSpecificClient(clientNetID);
+            TargetTellClientToSpawnExistingShips(netConnect, node);
+        }
 
-        RpcLinkWorldNodeInClientsToNetworkNode(networkNode, nodeLoc_and_ID);
+        // AND now load old UNITS into this client
+        foreach (NetworkNodeStruct unit in _syncedVars._network_Units_Container)
+        {
+            TargetTellClientToLoadExistingUnits(TargetSpecificClient(clientNetID), unit);
+        }
+
+        // two lists, first is the NetworkNodeIDIndex that links to the second nodestruct, basicly a shitty dictionary, to get the list index to 'then' use to get the nodestruct
+        _syncedVars._network_Ships_Indexs.Add(DataManipulation.ConvertVectorIntoInt(nodeStruct.NodeID));
+        _syncedVars._network_Ships_Container.Add(nodeStruct);
     }
 
+
     [ClientRpc]
-    void RpcLinkWorldNodeInClientsToNetworkNode(GameObject networkNode, Vector3 nodeID)
+    void RpcTellAllClientsToSpawnPlayerShip(NetworkNodeStruct nodeStruct, int playerID)
     {
-        if (networkNode != null)
+        TellClientToSpawnOtherClientShip(nodeStruct, playerID);
+    }
+    [TargetRpc]
+    public void TargetTellClientToSpawnExistingShips(NetworkConnection target, NetworkNodeStruct nodeStruct)
+    {
+        TellClientToSpawnOtherClientShip(nodeStruct, nodeStruct.PlayerID);
+    }
+
+
+    private void TellClientToSpawnOtherClientShip(NetworkNodeStruct nodeStruct, int playerID)
+    {
+        PlayerShipBuilder.CreatePlayerShip(nodeStruct, playerID);
+    }
+
+    ////////////////////////////////////////
+    /////////////////////////////////////////
+
+    [Command]
+    public void CmdTellServerToUpdateWorldNodePosition(NetworkInstanceId clientNetID, Vector3 networkNodeIndex, Vector3 locPos, Vector3 locRot)
+    {
+        if (!isServer) return;
+
+        CheckSyncVars();
+        int index = _syncedVars._network_Ships_Indexs.IndexOf(DataManipulation.ConvertVectorIntoInt(networkNodeIndex));
+        NetworkNodeStruct nodeStruct = _syncedVars._network_Ships_Container[index]; // this is not good and will be horribly innefficient
+        nodeStruct.CurrLoc = locPos;
+        nodeStruct.CurrRot = locRot;
+
+        // tell all clients to move ship
+        RpcTellOtherClientsToMoveClientShip(clientNetID, nodeStruct);
+    }
+    [ClientRpc]
+    void RpcTellOtherClientsToMoveClientShip(NetworkInstanceId clientIDWhoOwnsShip, NetworkNodeStruct nodeStruct)
+    {
+        if (clientIDWhoOwnsShip != PlayerManager.PlayerAgent.NetworkInstanceID) // to stop sending data to the clients OWN ship thats already moving being told to move
         {
-            GameObject parent = WorldManager._NetworkContainer;
-            NetworkNodeContainer script = networkNode.GetComponent<NetworkNodeContainer>();
-            script.ContainerNodeID = nodeID;
+            if (LocationManager.GetNodeFrom_Client(nodeStruct.NodeID) != null)
+            {
+                BaseNode worldNode = LocationManager.GetNodeFrom_Client(nodeStruct.NodeID);
 
-            networkNode.transform.SetParent(parent.transform);
+                float dist = Vector3.Distance(worldNode.transform.position, nodeStruct.CurrLoc);
+                if (dist > 10f)
+                {
+                    worldNode.transform.position = nodeStruct.CurrLoc;
+                    worldNode.transform.localEulerAngles = nodeStruct.CurrRot;
+                }
 
-            GameObject worldNode = LocationManager.GetNodeLocationScript_CLIENT(nodeID).gameObject;
-            worldNode.GetComponent<WorldNode>().NetworkNodeContainer = networkNode;
+                worldNode.MakeNodeMoveToLoc(nodeStruct.CurrLoc, nodeStruct.CurrRot, false);
+            }
         }
     }
-
-    [Command]
-    public void CmdTellServerToAssignUnitToNetworkNode(NetworkInstanceId unitNetID, Vector3 nodeID)
-    {
-        if (!isServer) return;
-        GameObject parent = network_Node_Containers[nodeID];
-        GameObject unit = network_Unit_Objects[unitNetID];
-
-        unit.transform.SetParent(parent.transform);
-    }
-
-    /////////////////////////////////////////
-    // TELL SERVER: MOVE NETWORK NODE + TELL CLIENT WORLD NODES TO FOLLOW
-    /////////////////////////////////////////
-
-
-    [Command]
-    public void CmdTellServerToSpawnShipWorldNodeOnClients(int playerID, Vector3 startPos) // these world nodes need to be tracked so there location can be pulled at any time. if another player joins later
-    {
-        if (!isServer) return;
-        RpcTellAllClientsToSpawnShipWorldNode(playerID);
-    }
-    [ClientRpc]
-    void RpcTellAllClientsToSpawnShipWorldNode(int playerID)
-    {
-        KeyValuePair<Vector3Int, Vector3Int> playerPosRot = PlayerManager.GetPlayerStartPosition(playerID);
-        BasePlayerData playerData = PlayerManager.GetPlayerData(playerID);
-        PlayerShipBuilder.CreatePlayerShip(playerData, playerPosRot.Key, playerPosRot.Value);
-    }
-
-
-    [Command]
-    public void CmdTellServerToMoveWorldNode(Vector3 nodeID, Vector3 locPos, Vector3 locRot, float thrust)
-    {
-        if (!isServer) return;
-        MovementManager.MoveNetworkNode_SERVER(nodeID, new KeyValuePair<Vector3, Vector3>(locPos, locRot));
-        RpcTellAllClientsWorldNodeToFollowNetworkNode(nodeID, thrust);
-    }
-
-    [ClientRpc]
-    void RpcTellAllClientsWorldNodeToFollowNetworkNode(Vector3 nodeID, float thrust)
-    {
-        GameObject worldNode = LocationManager.GetNodeLocationScript_CLIENT(nodeID).gameObject;
-        worldNode.GetComponent<WorldNode>().MakeNodeFollowNetworkNode(thrust);
-    }
-
 
     /////////////////////////////////////////
     // TELL SERVER: SPAWN SINGLE PLAYER UNIT + ASSIGN PROPERTIES TO CLIENTS COPY OF UNIT
     /////////////////////////////////////////
 
     [Command]
-    public void CmdTellServerToSpawnPlayerUnit(NetworkInstanceId clientNetID, UnitStruct unitData, int playerID, Vector3 worldStart, Vector3 nodeID, bool lastUnit)
+    public void CmdTellServerToSpawnPlayerUnit(NetworkInstanceId clientNetID, UnitStruct unitData, int playerID)
     {
         if (!isServer) return;
 
-        unitData.UnitStartingWorldLoc = worldStart;
+        // figure out what Cube to put unit in
+        KeyValuePair<Vector3Int, Vector3Int> playerPosRot = PlayerManager.GetPlayerStartPosition(playerID);
+        Vector3Int unitShipLoc = new Vector3Int((int)unitData.UnitShipLoc.x, (int)unitData.UnitShipLoc.y, (int)unitData.UnitShipLoc.z);
 
-        GameObject parent = GameManager._UnitsManager;
-        GameObject prefab = UnitsManager._unitBuilder.GetUnitModel(unitData.UnitModel);
-        GameObject unit = Instantiate(prefab, parent.transform, false);
-        NetworkServer.Spawn(unit);
-        AssignUnitDataToUnitScript(unit, playerID, unitData, nodeID);
+        Vector3Int unitStartLoc = new Vector3Int((unitShipLoc.x + playerPosRot.Key.x), (unitShipLoc.y + playerPosRot.Key.y), (unitShipLoc.z + playerPosRot.Key.z)); // This is nessicary, We need to get the cube ID
+        unitData.UnitStartingNodeID = unitStartLoc;
 
-        if (unit != null)
+        NetworkNodeStruct nodeStruct = new NetworkNodeStruct()
         {
-            network_Unit_Objects.Add(unit.GetComponent<NetworkIdentity>().netId, unit);
-            unit.transform.position = unitData.UnitStartingWorldLoc;
-            //CmdTellServerToAssignUnitToNetworkNode(unit.GetComponent<NetworkIdentity>().netId, nodeID);
-            RpcUpdatePlayerUnitsOnAllClients(unit, playerID, unitData, nodeID);
-        }
-        else
-        {
-            Debug.LogError("Unit cannot be created on SERVER");
-        }
+            NodeID = unitStartLoc,
+            StructIndex = _syncedVars._network_Units_Indexs.Count,
+            ClientNetID = clientNetID,
+            PlayerID = playerID,
+            CurrLoc = Vector3.zero,
+            CurrRot = unitData.UnitRot,
+            unitData = unitData
+        };
 
-        if(lastUnit)
-        {
-            TargetTellClientUnitsHaveAllLoaded(TargetSpecificClient(clientNetID));
-        }
+        // tell all clients to load new unit
+        RpcTellAllClientsToSpawnPlayerUnit(nodeStruct, playerID);
+
+        // two lists, first is the NetworkNodeIDIndex that links to the second nodestruct, basicly a shitty dictionary, to get the list index to 'then' use to get the nodestruct
+        _syncedVars._network_Units_Indexs.Add(DataManipulation.ConvertVectorIntoInt(nodeStruct.NodeID));
+        _syncedVars._network_Units_Container.Add(nodeStruct);
     }
-    
+
+
     [ClientRpc]
-    void RpcUpdatePlayerUnitsOnAllClients(GameObject unit, int playerID, UnitStruct unitData, Vector3 nodeID)
+    void RpcTellAllClientsToSpawnPlayerUnit(NetworkNodeStruct nodeStruct, int playerID)
     {
-        //if (isLocalPlayer)
-        //{
-            if (unit != null)
-            {
-                // units need to be assigned a parent for the layermanager + camera shit
-
-                AssignUnitDataToUnitScript(unit, playerID, unitData, nodeID);
-
-                GameObject parent = LocationManager.GetNodeLocationScript_CLIENT(nodeID).gameObject;
-                unit.transform.SetParent(parent.transform);
-
-                UnitScript unitScript = unit.GetComponent<UnitScript>();
-                Debug.Log("Unit Succesfully created on CLIENT: " + (int)unitScript.NetID.Value);
-                UnitsManager.AddUnitToGame(playerID, (int)unitScript.NetID.Value, unitScript); // add unit to generic unit manager pool
-
-                LocationManager.SetUnitOnCube_CLIENT(unit.GetComponent<UnitScript>(), unitScript.UnitStartingWorldLoc);
-
-                if (playerID == PlayerManager.PlayerID)
-                {
-                    GetComponent<UnitsAgent>().AddUnitToUnitAgent(unitScript); // add unit to a more specific player unit pool
-
-                    if (unitData.UnitCombatStats[0] == 1) // if rank is 'Captain'???? then make active
-                    {
-                        UnitsManager.SetUnitActive(true, playerID, (int)unitScript.NetID.Value);
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log("Unit cannot be created on CLIENT");
-            }
-        //}
+        TellClientToLoadOtherClientUnit(nodeStruct, playerID);
     }
     [TargetRpc]
-    public void TargetTellClientUnitsHaveAllLoaded(NetworkConnection target)
+    public void TargetTellClientToLoadExistingUnits(NetworkConnection target, NetworkNodeStruct nodeStruct)
     {
-        //if (isLocalPlayer)
-        //{
-            UnitsManager.AllPlayerUnitsHaveBeenLoaded();
-       // }
+        TellClientToLoadOtherClientUnit(nodeStruct, nodeStruct.PlayerID);
+    }
+
+    private void TellClientToLoadOtherClientUnit(NetworkNodeStruct nodeStruct, int playerID)
+    {
+        UnitsManager.CreateUnitOnClient(nodeStruct, playerID);
     }
 
 
-    ////////////////////////////////////////////////
+    ////////////////////////////////////////
+    /////////////////////////////////////////
 
-    void AssignUnitDataToUnitScript(GameObject unit, int playerID, UnitStruct unitData, Vector3 nodeID)
-    {
-        UnitScript unitScript = unit.GetComponent<UnitScript>();
-        unitScript.UnitData = unitData;
-        unitScript.NetID = unit.GetComponent<NetworkIdentity>().netId;
-        unitScript.PlayerControllerID = playerID;
-        unitScript.UnitModel = unitData.UnitModel;
-        unitScript.UnitCanClimbWalls = unitData.UnitCanClimbWalls;
-        unitScript.UnitStartingWorldLoc = unitData.UnitStartingWorldLoc;
-        unitScript.UnitCombatStats = unitData.UnitCombatStats;
-        unitScript.NodeID_UnitIsOn = nodeID;
-    }
-
-    ////////////////////////////////////////////////
-
-    // Server Move Unit 
-    [Command] //The [Command] attribute indicates that the following function will be called by the Client, but will be run on the Server
-    public void CmdTellServerToMoveUnit(NetworkInstanceId clientNetID, NetworkInstanceId unitNetID, int[] movePath)
+    [Command]
+    public void CmdTellServerToUpdateUnitPosition(NetworkInstanceId clientNetID, Vector3 nodeID, int networkNodeIndex, Vector3 locPos, Vector3 locRot)
     {
         if (!isServer) return;
-        Debug.Log("CmdTellServerToMoveUnit unitNetID.value " + (int)unitNetID.Value);
 
-        GameObject unit = network_Unit_Objects[unitNetID];
-        UnitScript unitScript = unit.GetComponent<UnitScript>();
-        List<Vector3> pathVects = DataManipulation.ConvertIntArrayIntoVectors(movePath);
+        CheckSyncVars();
+        NetworkNodeStruct nodeStruct = _syncedVars._network_Units_Container[networkNodeIndex];
+        nodeStruct.CurrLoc = locPos;
+        nodeStruct.CurrRot = locRot;
 
-        unit.GetComponent<MovementScript>().MoveUnit(pathVects);
+        // tell all clients to move unit
+        RpcTellOtherClientsToMoveUnit(clientNetID, nodeStruct);
     }
+    [ClientRpc]
+    void RpcTellOtherClientsToMoveUnit(NetworkInstanceId clientIDWhoOwnsUnit, NetworkNodeStruct nodeStruct)
+    {
+        if (clientIDWhoOwnsUnit != PlayerManager.PlayerAgent.NetworkInstanceID) // to stop sending data to the clients OWN ship thats already moving being told to move
+        {
+            //GameObject unit = LocationManager.GetUnitFrom_Client(nodeStruct.NodeID);
+
+            //float dist = Vector3.Distance(unit.transform.position, nodeStruct.CurrLoc);
+            //if (dist > 10f)
+            //{
+            //    unit.transform.position = nodeStruct.CurrLoc;
+            //    unit.transform.localEulerAngles = nodeStruct.CurrRot;
+            //}
+
+            //unit.MakeNodeMoveToLoc(nodeStruct.CurrLoc, nodeStruct.CurrRot, false); this needs to be made, using the ships lerp thingy
+        }
+    }
+
 
     ////////////////////////////////////////////////
-
-    // If the server works out before the client that a cube is inaccessable, then the server tells client to re-calculate path
-    public void ServerTellClientToFindNewPathForUnit(NetworkInstanceId clientNetID, Vector3 finalTarget)
-    {
-        TargetTellClientToFindNewPathForUnit(TargetSpecificClient(clientNetID), finalTarget);
-    }
-
-    [TargetRpc]
-    public void TargetTellClientToFindNewPathForUnit(NetworkConnection target, Vector3 finalTarget)
-    {
-        //if (isLocalPlayer)
-        //{
-            UnitsManager.MakeActiveUnitMove_CLIENT(finalTarget);
-      //  }
-    }
-
-    ////////////////////////////////////////////////
-
-    [Command] //The [Command] attribute indicates that the following function will be called by the Client, but will be run on the Server
-    public void CmdTellServerToUpdateLocation(Vector3 vect, bool[] cubeData)
-    {
-        if (!isServer) return;
-        LocationManager.UpdateServerLocation_SERVER(vect, cubeData);
-    }
-
+    ///
 }
+

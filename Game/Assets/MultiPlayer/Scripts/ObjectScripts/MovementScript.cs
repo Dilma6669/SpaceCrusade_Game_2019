@@ -13,8 +13,8 @@ public class MovementScript : MonoBehaviour
 
 
     private Vector3 _finalTargetStaticLoc;              // final target
-    private Vector3 _currTargetStaticLoc;               // current target
-    private CubeLocation_SERVER _currTargetScript;      // current target script
+    private Vector3 _currTargetCubeID;                 // current target ID
+    private CubeLocationScript _currTargetScript;      // current target script
     public Vector3 _currTargetDynamicLoc;               // vector of the moving cube Object
 
     public GameObject _worldNodeObject;
@@ -72,7 +72,7 @@ public class MovementScript : MonoBehaviour
         {
             _unitCurrPos = unitContainerTransform.position;
 
-            _currTargetDynamicLoc = _currTargetStaticLoc + GetWorldNodeMovementVect();
+            _currTargetDynamicLoc = _currTargetScript.transform.position;
 
             if (_unitCurrPos != _currTargetDynamicLoc)
             {
@@ -109,7 +109,7 @@ public class MovementScript : MonoBehaviour
     {
         locCount += 1;
 
-        Debug.Log("UnitReachedTarget!");
+        //Debug.Log("UnitReachedTarget!");
 
         if (_newPathSet) // has a new location been clicked
         {
@@ -141,7 +141,7 @@ public class MovementScript : MonoBehaviour
 
     private void FinishMoving()
     {
-        Debug.Log("FINISHED MOVING!");
+        //Debug.Log("FINISHED MOVING!");
 
         AnimationManager.SetAnimatorBool(_animators, "Combat_Walk", false);
         moveInProgress = false;
@@ -152,12 +152,12 @@ public class MovementScript : MonoBehaviour
 
     private void SetNextTarget()
     {
-        _currTargetStaticLoc = _nodes[locCount];
-        _currTargetScript = LocationManager.GetLocationScript_SERVER(_nodes[locCount]);
+        _currTargetCubeID = _nodes[locCount];
+        _currTargetScript = LocationManager.GetLocationScript_CLIENT(_currTargetCubeID);
        
-        if (!LocationManager.SetUnitOnCube_SERVER(GetComponent<UnitScript>(), _currTargetStaticLoc))
+        if (!LocationManager.SetUnitOnCube_CLIENT(GetComponent<UnitScript>(), _currTargetCubeID))
         {
-            Debug.LogWarning("units movement interrupted >> recalculating");
+            //Debug.LogWarning("units movement interrupted >> recalculating");
             moveInProgress = false;
             Reset();
             //NetWorkManager.NetworkAgent.ServerTellClientToFindNewPathForUnit(PlayerManager.PlayerAgent.NetID, _finalTargetStaticLoc);
@@ -176,8 +176,7 @@ public class MovementScript : MonoBehaviour
         {
             _finalTargetStaticLoc = path[path.Count - 1];
 
-            Vector3 nodeVect = gameObject.GetComponent<UnitScript>().NodeID_UnitIsOn;
-            //_worldNodeObject = LocationManager.GetNetworkNodeContainerScript_SERVER(nodeVect).gameObject; << network node shit
+            Vector3 nodeVect = gameObject.GetComponent<UnitScript>().CubeUnitIsOn.GetComponent<CubeLocationScript>().CubeID;
             _worldNodeStaticLoc = nodeVect;
 
             if (moveInProgress)

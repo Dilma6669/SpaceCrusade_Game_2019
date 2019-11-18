@@ -26,9 +26,9 @@ public class ConnectorNodeBuilder : MonoBehaviour
     ////////////////////////////////////////////////
 
     // Get Connector Vects /////////////////////////////////////////////////////
-    public static Dictionary<WorldNode, List<KeyValuePair<Vector3Int, int>>> GetConnectorVects(List<WorldNode> worldNodes)
+    public static Dictionary<WorldNode, List<KeyValuePair<Vector3, int>>> GetConnectorVects(List<WorldNode> worldNodes)
     {
-        Dictionary<WorldNode, List<KeyValuePair<Vector3Int, int>>> connectorVectsAndRotations = new Dictionary<WorldNode, List<KeyValuePair<Vector3Int, int>>>();
+        Dictionary<WorldNode, List<KeyValuePair<Vector3, int>>> connectorVectsAndRotations = new Dictionary<WorldNode, List<KeyValuePair<Vector3, int>>>();
 
         // int floorBounds = MapSettings.worldSizeX * MapSettings.worldSizeZ; dont need this now for some weird reason
         int roofBounds = ((MapSettings.worldSizeX * MapSettings.worldSizeZ) * MapSettings.worldSizeY);
@@ -37,7 +37,7 @@ public class ConnectorNodeBuilder : MonoBehaviour
         {
             int nodeCount = worldNode.worldNodeCount;
             int[] worldNeighbours = worldNode.neighbours;
-            List<KeyValuePair<Vector3Int, int>> vectList = new List<KeyValuePair<Vector3Int, int>>();
+            List<KeyValuePair<Vector3, int>> vectList = new List<KeyValuePair<Vector3, int>>();
 
             if (worldNode.NodeSize == 1)
             {
@@ -48,7 +48,7 @@ public class ConnectorNodeBuilder : MonoBehaviour
                         if (worldNeigh < roofBounds) // keeping nodes inside bounds
                         {
                             WorldNode neighbour = worldNodes[worldNeigh];
-                            KeyValuePair<Vector3Int, int> vectorAndRot = GetVectsAndRotation(worldNode, neighbour, worldNeigh);
+                            KeyValuePair<Vector3, int> vectorAndRot = GetVectsAndRotation(worldNode, neighbour, worldNeigh);
                             if (vectorAndRot.Value != -1) // weird issue still not sure why
                             {
                                 vectList.Add(vectorAndRot);
@@ -62,9 +62,9 @@ public class ConnectorNodeBuilder : MonoBehaviour
         return connectorVectsAndRotations;
     }
 
-    public static KeyValuePair<Vector3Int, int> GetVectsAndRotation(WorldNode node0, WorldNode node1, int neighCount)
+    public static KeyValuePair<Vector3, int> GetVectsAndRotation(WorldNode node0, WorldNode node1, int neighCount)
     {
-        Vector3Int connectionVect = new Vector3Int();
+        Vector3 connectionVect = new Vector3();
 
         bool initialSmaller = false;
         WorldNode smallerNode = null;
@@ -90,8 +90,8 @@ public class ConnectorNodeBuilder : MonoBehaviour
 
        int direction = -1;
 
-        Vector3Int finalVect;
-        Vector3Int seperateAxis; // this is to seperate what axis x,y,z neighbour is
+        Vector3 finalVect;
+        Vector3 seperateAxis; // this is to seperate what axis x,y,z neighbour is
 
         if (initialSmaller)
         {
@@ -110,12 +110,12 @@ public class ConnectorNodeBuilder : MonoBehaviour
             if (seperateAxis.x > 0)
             {
                 direction = 1;
-                finalVect = new Vector3Int(finalVect.x + (MapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
+                finalVect = new Vector3(finalVect.x + (MapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
             }
             else if (seperateAxis.x < 0)
             {
                 direction = 3;
-                finalVect = new Vector3Int(finalVect.x - (MapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
+                finalVect = new Vector3(finalVect.x - (MapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
             }
         }
         else if (seperateAxis.x == 0 && seperateAxis.y != 0 && seperateAxis.z == 0)
@@ -123,12 +123,12 @@ public class ConnectorNodeBuilder : MonoBehaviour
             if (seperateAxis.y > 0)
             {
                 direction = 4; // these are the bastards making the connectors go UP
-                finalVect = new Vector3Int(finalVect.x, finalVect.y + (MapSettings.sizeOfMapPiecesY), finalVect.z);
+                finalVect = new Vector3(finalVect.x, finalVect.y + (MapSettings.sizeOfMapPiecesY), finalVect.z);
             }
             else if (seperateAxis.y < 0)
             {
                 direction = 4;// these are the bastards making the connectors go UP
-                finalVect = new Vector3Int(finalVect.x, finalVect.y - (MapSettings.sizeOfMapPiecesY), finalVect.z);
+                finalVect = new Vector3(finalVect.x, finalVect.y - (MapSettings.sizeOfMapPiecesY), finalVect.z);
             }
         }
         else if (seperateAxis.x == 0 && seperateAxis.y == 0 && seperateAxis.z != 0)
@@ -136,31 +136,31 @@ public class ConnectorNodeBuilder : MonoBehaviour
             if (seperateAxis.z > 0)
             {
                 direction = 0;
-                finalVect = new Vector3Int(finalVect.x, finalVect.y, finalVect.z + (MapSettings.sizeOfMapPiecesXZ));
+                finalVect = new Vector3(finalVect.x, finalVect.y, finalVect.z + (MapSettings.sizeOfMapPiecesXZ));
             }
             else if (seperateAxis.z < 0)
             {
                 direction = 2;
-                finalVect = new Vector3Int(finalVect.x, finalVect.y, finalVect.z - (MapSettings.sizeOfMapPiecesXZ));
+                finalVect = new Vector3(finalVect.x, finalVect.y, finalVect.z - (MapSettings.sizeOfMapPiecesXZ));
             }
         }
         else
         {
             //Debug.LogError("SOMETHING WRONG HERE direction: " + direction);
             //Debug.LogFormat("initialSmaller: {0} -node0: {1} -node1: {2}", initialSmaller, node0.nodeLocation, node1.nodeLocation);
-            return new KeyValuePair<Vector3Int, int>(new Vector3Int(-1, -1, -1), -1);
+            return new KeyValuePair<Vector3, int>(new Vector3(-1, -1, -1), -1);
         }
 
-        connectionVect = new Vector3Int(finalVect.x - 1, finalVect.y, finalVect.z - 1); // -1's to fix annoying postiioning issue
+        connectionVect = new Vector3(finalVect.x - 1, finalVect.y, finalVect.z - 1); // -1's to fix annoying postiioning issue
 
-        return new KeyValuePair<Vector3Int, int>(connectionVect, direction);
+        return new KeyValuePair<Vector3, int>(connectionVect, direction);
     }
     ////////////////////////////////////////////////////////////////////////////
 
 
 
     // Create Connector Nodes ////////////////////////////////////////////////
-    public static Dictionary<WorldNode, List<ConnectorNode>> CreateConnectorNodes(Dictionary<WorldNode, List<KeyValuePair<Vector3Int, int>>> connectorVects)
+    public static Dictionary<WorldNode, List<ConnectorNode>> CreateConnectorNodes(Dictionary<WorldNode, List<KeyValuePair<Vector3, int>>> connectorVects)
     {
         // Wrap map Nodes around around Initial
         Dictionary<WorldNode, List<ConnectorNode>> worldNodeAndConnectorNodes = new Dictionary<WorldNode, List<ConnectorNode>>();
@@ -168,11 +168,11 @@ public class ConnectorNodeBuilder : MonoBehaviour
         foreach (WorldNode worldNode in connectorVects.Keys)
         {
             List<ConnectorNode> connectorNodes = new List<ConnectorNode>();
-            List<KeyValuePair<Vector3Int, int>> vectsAndRot = connectorVects[worldNode];
+            List<KeyValuePair<Vector3, int>> vectsAndRot = connectorVects[worldNode];
 
-            foreach (KeyValuePair<Vector3Int, int> pair in vectsAndRot)
+            foreach (KeyValuePair<Vector3, int> pair in vectsAndRot)
             {
-                Vector3Int location = pair.Key;
+                Vector3 location = pair.Key;
                 int direction = pair.Value;
 
                 int nodeLayerCount = -1;
@@ -182,7 +182,7 @@ public class ConnectorNodeBuilder : MonoBehaviour
                     nodeType = NodeTypes.ConnectorNode,
                     mapPiece = MapPieceTypes.ConnectorPiece_01,
                     location = pair.Key,
-                    rotation = Quaternion.identity,
+                    rotation = Vector3.zero,
                     direction = pair.Value,
                     parentNode = worldNode.gameObject.transform
                 };

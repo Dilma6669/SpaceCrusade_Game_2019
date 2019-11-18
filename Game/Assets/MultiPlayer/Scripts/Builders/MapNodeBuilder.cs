@@ -26,11 +26,11 @@ public class MapNodeBuilder : MonoBehaviour
     ////////////////////////////////////////////////
 
     // Get Map Vects ////////////////////////////////////////////////////////////
-    private static List<Vector3Int> GetMapVects(WorldNode nodeScript, bool customShip, Vector3Int customSize)
+    private static List<Vector3> GetMapVects(WorldNode nodeScript, bool customShip, Vector3 customSize)
     {
-        Vector3Int worldNodeloc = nodeScript.NodeLocation;
+        Vector3 worldNodeloc = nodeScript.NodeLocation;
 
-        List<Vector3Int> nodeVects = new List<Vector3Int>();
+        List<Vector3> nodeVects = new List<Vector3>();
 
         int sizeX;
         int sizeZ;
@@ -52,9 +52,9 @@ public class MapNodeBuilder : MonoBehaviour
         }
         else
         {
-            sizeX = customSize.x;
-            sizeZ = customSize.z;
-            sizeY = customSize.y;
+            sizeX = (int)customSize.x;
+            sizeZ = (int)customSize.z;
+            sizeY = (int)customSize.y;
         }
 
         int mapOffset = -1;// this is for the maps overlapping each other with thenew system (might be fucking my self over here)
@@ -63,25 +63,25 @@ public class MapNodeBuilder : MonoBehaviour
         multiplierZ = (int)Mathf.Floor(sizeZ / 2) * (MapSettings.sizeOfMapPiecesXZ + mapOffset);
         multiplierY = (int)Mathf.Floor(sizeY / 2) * (MapSettings.sizeOfMapPiecesY + mapOffset);
 
-        countX = worldNodeloc.x - multiplierX;
-        countZ = worldNodeloc.z - multiplierZ;
-        countY = worldNodeloc.y - multiplierY;
+        countX = (int)worldNodeloc.x - multiplierX;
+        countZ = (int)worldNodeloc.z - multiplierZ;
+        countY = (int)worldNodeloc.y - multiplierY;
 
         for (int y = 0; y < sizeY; y++)
         {
             for (int z = 0; z < sizeZ; z++)
             {
-                for (int x = 0; x < sizeX; x++)
+                for (int x = 0; x < sizeX; x++) 
                 {
                     // Debug.Log("Vector3 (gridLoc): x: " + x + " y: " + y + " z: " + z);
-                    nodeVects.Add(new Vector3Int(countX, countY, countZ));
+                    nodeVects.Add(new Vector3(countX, countY, countZ));
                     countX += (MapSettings.sizeOfMapPiecesXZ + mapOffset);
                 }
-                countX = worldNodeloc.x - multiplierX;
+                countX = (int)worldNodeloc.x - multiplierX;
                 countZ += (MapSettings.sizeOfMapPiecesXZ + mapOffset);
             }
-            countX = worldNodeloc.x - multiplierX;
-            countZ = worldNodeloc.z - multiplierZ;
+            countX = (int)worldNodeloc.x - multiplierX;
+            countZ = (int)worldNodeloc.z - multiplierZ;
             countY += (MapSettings.sizeOfMapPiecesY + mapOffset);
         }
 
@@ -91,14 +91,14 @@ public class MapNodeBuilder : MonoBehaviour
 
 
     // Create Map Nodes ////////////////////////////////////////////////////////
-    public static Dictionary<WorldNode, List<MapNode>> CreateMapNodes(List<WorldNode> worldNodes, bool customShip, Vector3Int shipSize, List<MapPieceStruct> customShipMapPieces = null)
+    public static Dictionary<WorldNode, List<MapNode>> CreateMapNodes(List<WorldNode> worldNodes, bool customShip, Vector3 shipSize, List<MapPieceStruct> customShipMapPieces = null)
     {
         // Wrap map Nodes around around Initial
         Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes = new Dictionary<WorldNode, List<MapNode>>();
 
         foreach (WorldNode worldNode in worldNodes)
         {
-            List<Vector3Int> mapVects = (customShip == false) ? GetMapVects(worldNode, false, Vector3Int.zero) : GetMapVects(worldNode, true, shipSize);
+            List<Vector3> mapVects = (customShip == false) ? GetMapVects(worldNode, false, Vector3.zero) : GetMapVects(worldNode, true, shipSize);
 
             List<MapNode> mapNodes = new List<MapNode>();
 
@@ -106,7 +106,7 @@ public class MapNodeBuilder : MonoBehaviour
             int layerCount = 0;
             int nodeLayerCount = -1;
 
-            foreach (Vector3Int location in mapVects)
+            foreach (Vector3 location in mapVects)
             {
                 MapPieceStruct mapData = new MapPieceStruct();
 
@@ -133,7 +133,7 @@ public class MapNodeBuilder : MonoBehaviour
                         nodeType = NodeTypes.MapNode,
                         mapPiece = randomMapPiece,
                         location = location,
-                        rotation = Quaternion.identity,
+                        rotation = Vector3.zero,
                         direction = 0,
                         parentNode = worldNode.gameObject.transform
                     };
@@ -147,7 +147,7 @@ public class MapNodeBuilder : MonoBehaviour
                         nodeType = customMapData.nodeType,
                         mapPiece = customMapData.mapPiece,
                         location = location,
-                        rotation = Quaternion.identity,
+                        rotation = Vector3.zero,
                         direction = 0,
                         parentNode = worldNode.gameObject.transform
                     };

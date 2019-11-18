@@ -41,6 +41,7 @@ public class CubeConnections : MonoBehaviour
                 {
                     script.SetNeighbourVects();
                     script.CubePlatform = true;
+                    //Debug.Log("fuck script.CubePlatform >> " + vect);
                 }
             }
         }
@@ -77,8 +78,6 @@ public class CubeConnections : MonoBehaviour
 
     // If ANY kind of wall/floor/object make neighbour cubes walkable
     public static void SetUpPanelInCube(CubeLocationScript neighbourHalfScript) {
-
-        return;
 
 		PanelPieceScript panelScript = neighbourHalfScript._panelScriptChild;
 
@@ -117,11 +116,11 @@ public class CubeConnections : MonoBehaviour
 
     private static void SetUpFloorPanel(CubeLocationScript neighbourHalfScript, PanelPieceScript panelScript) {
 
-        Vector3 cubeHalfLoc = neighbourHalfScript.CubeStaticLocVector;
+        Vector3 cubeHalfLoc = neighbourHalfScript.CubeID;
 
         Vector3 leftVect = new Vector3 (cubeHalfLoc.x, cubeHalfLoc.y - 1, cubeHalfLoc.z);
         CubeLocationScript cubeScriptLeft = LocationManager.GetLocationScript_CLIENT(leftVect); // underneath panel
-		if (cubeScriptLeft != null) {
+        if (cubeScriptLeft != null) {
             panelScript.cubeScriptLeft = cubeScriptLeft;
 			panelScript.cubeLeftVector = leftVect;
 			panelScript.leftPosNode = new Vector3 (0, 0, 0);
@@ -129,6 +128,10 @@ public class CubeConnections : MonoBehaviour
             SetHumanCubeRules(cubeScriptLeft, false, false, false);
             SetAlienCubeRules(cubeScriptLeft, true, true, true);
 		}
+        else
+        {
+            Debug.LogError("Got an issue here");
+        }
 
 
         Vector3 rightVect = new Vector3(cubeHalfLoc.x, cubeHalfLoc.y + 1, cubeHalfLoc.z);
@@ -142,8 +145,12 @@ public class CubeConnections : MonoBehaviour
             SetHumanCubeRules(cubeScriptRight, true, true, true);
             SetAlienCubeRules(cubeScriptRight, true, true, true);
         }
+        else
+        {
+            Debug.LogError("Got an issue here");
+        }
 
-		if (cubeScriptLeft == null) {
+        if (cubeScriptLeft == null) {
 			panelScript.cubeScriptLeft = panelScript.cubeScriptRight;
 			panelScript.cubeLeftVector = panelScript.cubeRightVector;
 			panelScript.leftPosNode = panelScript.rightPosNode;
@@ -163,7 +170,7 @@ public class CubeConnections : MonoBehaviour
         CubeLocationScript cubeScriptLeft = null;
         CubeLocationScript cubeScriptRight = null;
 
-        Vector3 cubeHalfLoc = neighbourHalfScript.CubeStaticLocVector;
+        Vector3 cubeHalfLoc = neighbourHalfScript.CubeID;
 
         int cubeAngle = neighbourHalfScript.CubeAngle;
 		int panelAngle = panelScript.panelAngle;
@@ -273,7 +280,7 @@ public class CubeConnections : MonoBehaviour
     // THIS IS GOING TO CAUSE PROBLEMS IN FUTURE COZ THERES NO CHECKS IF THEY CAN MOVE ONTO SLOPE, ITS ALWAYS YES
     private static void SetUpFloorAnglePanel(CubeLocationScript cubeScript, PanelPieceScript panelScript)
     { 
-        Vector3 cubeLoc = cubeScript.CubeStaticLocVector;
+        Vector3 cubeLoc = cubeScript.CubeID;
 
         Vector3 rightVect = new Vector3(cubeLoc.x, cubeLoc.y + 2, cubeLoc.z); // OnTop ( I think)
         CubeLocationScript cubeScriptRight = LocationManager.GetLocationScript_CLIENT(rightVect);
@@ -320,7 +327,7 @@ public class CubeConnections : MonoBehaviour
     // THIS IS GOING TO CAUSE PROBLEMS IN FUTURE COZ THERES NO CHECKS IF THEY CAN MOVE ONTO SLOPE, ITS ALWAYS YES
     private static void SetUpCeilingAnglePanel(CubeLocationScript cubeScript, PanelPieceScript panelScript)
     {
-        Vector3 cubeLoc = cubeScript.CubeStaticLocVector;
+        Vector3 cubeLoc = cubeScript.CubeID;
 
         Vector3 TopHalfVect = new Vector3(cubeLoc.x, cubeLoc.y + 1, cubeLoc.z);
         Vector3 bottomHalfVect = new Vector3(cubeLoc.x, cubeLoc.y - 1, cubeLoc.z);

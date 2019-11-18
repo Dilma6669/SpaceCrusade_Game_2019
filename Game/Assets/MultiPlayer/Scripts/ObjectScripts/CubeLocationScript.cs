@@ -5,30 +5,29 @@ using UnityEngine;
 public class CubeLocationScript : MonoBehaviour {
 
     // Cube info
-    int _cubeUniqueID;
-    Vector3 _cubeStaticLoc;
+    public Vector3 _cubeUniqueID;
     int _cubeType;
     int _cubeAngle;
     int _cubeLayerID;
-    bool _cubeMovable; // this is all movable cubes everywhere, including in the air
-    bool _cubePlatform; // this is all movable cubes only with panels to walk on, not in air
-    bool _cubeIsSlope;
-    bool _cubeIsPanel;
+    public bool _cubeMovable; // this is all movable cubes everywhere, including in the air
+    public bool _cubePlatform; // this is all movable cubes only with panels to walk on, not in air
+    public bool _cubeIsSlope;
+    public bool _cubeIsPanel;
 
     bool _cubeVisible;
     bool _cubSelected;
     bool _cubeOccupied; // If a guy is on square
 
-    bool _isHumanWalkable;
-    bool _isHumanClimbable;
-    bool _isHumanJumpable;
-    bool _isAlienWalkable;
-    bool _isAlienClimbable;
-    bool _isAlienJumpable;
+    public bool _isHumanWalkable;
+    public bool _isHumanClimbable;
+    public bool _isHumanJumpable;
+    public bool _isAlienWalkable;
+    public bool _isAlienClimbable;
+    public bool _isAlienJumpable;
 
     // All Checks combined into two bools
-    bool _isHumanMoveable;
-    bool _isAlienMoveable;
+    public bool _isHumanMoveable;
+    public bool _isAlienMoveable;
 
     // panel objects
     int _panelChildAngle;
@@ -49,16 +48,10 @@ public class CubeLocationScript : MonoBehaviour {
     bool[] _neighBools = new bool[27];
 
 
-    public int CubeUniqueID
+    public Vector3 CubeID
     {
         get { return _cubeUniqueID; }
         set { _cubeUniqueID = value; }
-    }
-
-    public Vector3 CubeStaticLocVector
-    {
-        get { return _cubeStaticLoc; }
-        set { _cubeStaticLoc = value; }
     }
 
     public bool CubeMoveable
@@ -215,7 +208,7 @@ public class CubeLocationScript : MonoBehaviour {
         IS_HUMAN_MOVABLE = false;
         IS_ALIEN_MOVABLE = false;
 
-        CubeStaticLocVector = new Vector3(-1, -1, -1);
+        CubeID = new Vector3(-1, -1, -1);
     }
 
     public void AssignCubeNeighbours()
@@ -253,7 +246,7 @@ public class CubeLocationScript : MonoBehaviour {
 		if (onOff) {
 			CubeActive (true);
 			_activePanel = panelSelected;
-            LocationManager.SetCubeActive_CLIENT(true, CubeStaticLocVector); // not sure if this should be here yet
+            LocationManager.SetCubeActive_CLIENT(true, CubeID); // not sure if this should be here yet
         }
         else
         {
@@ -267,7 +260,7 @@ public class CubeLocationScript : MonoBehaviour {
         
         if(!NeighbourHalfVects.Any())
         {
-            Vector3 ownVect = new Vector3(CubeStaticLocVector.x, CubeStaticLocVector.y, CubeStaticLocVector.z);
+            Vector3 ownVect = new Vector3(CubeID.x, CubeID.y, CubeID.z);
     
             //neighHalfVects.Add(new Vector3 (ownVect.x - 1, ownVect.y - 1, ownVect.z - 1)); // 0
             //neighHalfVects.Add(new Vector3 (ownVect.x + 0, ownVect.y - 1, ownVect.z - 1)); // 1
@@ -315,7 +308,7 @@ public class CubeLocationScript : MonoBehaviour {
 
         if (!NeighbourVects.Any())
         {
-            Vector3 ownVect = new Vector3(CubeStaticLocVector.x, CubeStaticLocVector.y, CubeStaticLocVector.z);
+            Vector3 ownVect = new Vector3(CubeID.x, CubeID.y, CubeID.z);
     
             //NeighbourVects.Add(new Vector3 (ownVect.x - 2, ownVect.y - 2, ownVect.z - 2)); // 0
             NeighbourVects.Add(new Vector3 (ownVect.x + 0, ownVect.y - 2, ownVect.z - 2)); // 1
@@ -380,11 +373,11 @@ public class CubeLocationScript : MonoBehaviour {
     }
 
 
-	public void CreatePathFindingNodeInCube(int unitID) {
+	public void CreatePathFindingNodeInCube(Vector3 unitID) {
         _pathFindingNode = WorldBuilder._nodeBuilder.CreatePathFindingNode(transform, unitID);
         _pathFindingNode.transform.position = transform.position;
         _pathFindingNode.transform.localScale = new Vector3(10, 10, 10);
-        _pathFindingNode.GetComponent<PathFindingNode>().CubeParentLoc = CubeStaticLocVector;
+        _pathFindingNode.GetComponent<PathFindingNode>().CubeParentLoc = CubeID;
     }
 
     public void DestroyPathFindingNode()
@@ -394,6 +387,21 @@ public class CubeLocationScript : MonoBehaviour {
             _pathFindingNode.GetComponent<PathFindingNode>().DestroyNode();
         }
         ResetPathFindingValues();
+    }
+
+
+    public void DestroyCubeIfNotImportant()
+    {
+        if (CubeIsPanel)
+            return;
+
+        if (CubePlatform)
+            return;
+
+        if (CubeIsSlope)
+            return;
+
+        Destroy(this);
     }
 
 }

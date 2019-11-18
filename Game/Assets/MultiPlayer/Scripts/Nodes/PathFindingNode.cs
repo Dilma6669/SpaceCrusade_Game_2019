@@ -2,11 +2,10 @@
 
 public class PathFindingNode : MonoBehaviour
 {
-
-    int _unitControllerID;
+    Vector3 _unitControllerID;
     Vector3 _cubeParentLoc;
 
-    public int UnitControllerID
+    public Vector3 UnitControllerID
     {
         get { return _unitControllerID; }
         set { _unitControllerID = value; }
@@ -24,7 +23,7 @@ public class PathFindingNode : MonoBehaviour
         UnitScript unitScript = other.GetComponent<UnitScript>();
         if (unitScript != null)
         {
-            int unitID = (int)other.GetComponent<UnitScript>().NetID.Value;
+            Vector3 unitID = other.GetComponent<UnitScript>().UnitID;
             if (unitID == UnitControllerID)
             {
                 unitScript.SetUnitToNextLocation_CLIENT();

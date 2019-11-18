@@ -6,15 +6,15 @@ public class PlayerAgent : NetworkBehaviour
 {
     ////////////////////////////////////////////////
 
-    NetworkInstanceId _netID;
+    NetworkInstanceId _networkID;
     int _totalPlayers = -1;
 
     ////////////////////////////////////////////////
 
-    public NetworkInstanceId NetID
+    public NetworkInstanceId NetworkInstanceID
     {
-        get { return _netID; }
-        set { _netID = value; }
+        get { return _networkID; }
+        set { _networkID = value; }
     }
 
     public int TotalPlayers
@@ -49,17 +49,18 @@ public class PlayerAgent : NetworkBehaviour
         if (!isLocalPlayer) return;
         Debug.Log("A network Player object has been created");
 
-        NetWorkManager.NetworkAgent = GetComponent<NetworkAgent>();
+        PlayerManager.PlayerAgent = GetComponent<PlayerAgent>();
+        PlayerManager.CameraAgent = GetComponent<CameraAgent>();
+        PlayerManager.UnitsAgent = GetComponent<UnitsAgent>();
+        PlayerManager.NetworkAgent = GetComponent<NetworkAgent>();
 
         PlayerManager.SetUpPlayer();
 
-        NetID = GetComponent<NetworkIdentity>().netId;
-        GetComponent<NetworkAgent>().CmdAddPlayerToSession(NetID);
+        NetworkInstanceID = GetComponent<NetworkIdentity>().netId;
+        GetComponent<NetworkAgent>().CmdAddPlayerToSession(NetworkInstanceID);
 
         UIManager.SetUpPlayersGUI(PlayerManager.PlayerID);
         CameraManager.SetUpCameraAndLayers(PlayerManager.PlayerID, GetComponent<CameraAgent>());
-
-        PlayerManager.LoadPlayersShip(PlayerManager.PlayerID);
 
         WorldManager.BuildWorldForClient();
     }
@@ -69,13 +70,19 @@ public class PlayerAgent : NetworkBehaviour
     {
         TotalPlayers = count;
         UIManager.UpdateTotalPlayersGUI(count);
+
+        if (!isLocalPlayer) return;
+
+        PlayerManager.PlayerLoaded();
     }
 
-    public void SetUpPlayerStartPosition(Vector3Int camPos, Quaternion camRot)
+    public void SetUpPlayerStartPosition(Vector3 camPos, Quaternion camRot)
     {
         transform.position = camPos;
         transform.rotation = camRot;
     }
 
+
+    //////////////
 
 }

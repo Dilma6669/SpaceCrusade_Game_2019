@@ -89,7 +89,7 @@ public class PanelPieceScript : MonoBehaviour {
             {
                 int triIndex = hit.triangleIndex;
 
-                Debug.Log("Hit Triangle index : " + hit.triangleIndex);
+                //Debug.Log("Hit Triangle index : " + hit.triangleIndex);
 
                 if (triIndex == 0 || triIndex == 1 || // (if floor) To sit OnTop of panels
                         triIndex == 4 || triIndex == 5 ||

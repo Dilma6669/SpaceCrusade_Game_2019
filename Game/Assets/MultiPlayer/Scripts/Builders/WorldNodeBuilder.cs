@@ -40,13 +40,13 @@ public class WorldNodeBuilder : MonoBehaviour
     }
 
     // Get World Outer Docking Vects ////////////////////////////////////////////
-    public static List<List<Vector3Int>> GetWorld_Outer_DockingVects()
+    public static List<List<Vector3>> GetWorld_Outer_DockingVects()
     {
-        List<List<Vector3Int>> container = new List<List<Vector3Int>>();
+        List<List<Vector3>> container = new List<List<Vector3>>();
 
-        List<Vector3Int> worldVects = new List<Vector3Int>();
-        List<Vector3Int> outerVects = new List<Vector3Int>();
-        List<Vector3Int> dockingVects = new List<Vector3Int>();
+        List<Vector3> worldVects = new List<Vector3>();
+        List<Vector3> outerVects = new List<Vector3>();
+        List<Vector3> dockingVects = new List<Vector3>();
 
         int countY = MapSettings.worldPadding; // First node position
         int countZ = MapSettings.worldPadding;
@@ -80,7 +80,7 @@ public class WorldNodeBuilder : MonoBehaviour
                         // Get outer Zone central node
                         // if (z == (worldSizeX - 2) && x == centralOuterNodeX && y == 0)
                         //  {
-                        outerVects.Add(new Vector3Int(resultX, resultY, resultZ));
+                        outerVects.Add(new Vector3(resultX, resultY, resultZ));
                         //  } 
 
                         // Get docking lines
@@ -91,7 +91,7 @@ public class WorldNodeBuilder : MonoBehaviour
                     }
                     else // All central map nodes
                     {
-                        worldVects.Add(new Vector3Int(resultX, resultY, resultZ));
+                        worldVects.Add(new Vector3(resultX, resultY, resultZ));
                     }
 
 
@@ -115,7 +115,7 @@ public class WorldNodeBuilder : MonoBehaviour
 
 
     // Create World Nodes ///////////////////////////////////////////////////
-    public static void CreateWorldNodes(List<Vector3Int> nodeVects)
+    public static void CreateWorldNodes(List<Vector3> nodeVects)
     {
         // build inital map Node
         _WorldNodes = new List<WorldNode>();
@@ -133,14 +133,14 @@ public class WorldNodeBuilder : MonoBehaviour
         int countFloorY = 1;
 
         int count = 1;
-        foreach (Vector3Int location in nodeVects)
+        foreach (Vector3 location in nodeVects)
         {
             MapPieceStruct mapData = new MapPieceStruct()
             {
                 nodeType = NodeTypes.WorldNode,
                 mapPiece = MapPieceTypes.MapPiece_Corridor_01,
                 location = location,
-                rotation = Quaternion.identity,
+                rotation = Vector3.zero,
                 direction = 0,
                 parentNode = WorldManager._WorldContainer.transform
             };
@@ -201,7 +201,7 @@ public class WorldNodeBuilder : MonoBehaviour
             LayerManager.AddNodeToLayer(nodeScript); // for camera layers
 
             // for the dynamic grid experiment
-            LocationManager.SetNodeScriptToLocation_CLIENT(location, nodeScript);
+            LocationManager.SaveNodeTo_CLIENT(location, nodeScript);
             //LocationManager.SetNodeScriptToLocation_SERVER(vect, nodeScript); // this needs to do this in the server
 
             count++;

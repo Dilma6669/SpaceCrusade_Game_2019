@@ -39,9 +39,9 @@ public class CameraAgent : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
 
-        CameraManager.Camera_Agent = this;
         _camera.enabled = true;
 
+        PlayerManager.CameraAgent = this;
     }
 
 
@@ -52,7 +52,7 @@ public class CameraAgent : NetworkBehaviour
 
         if (unitScript.PlayerPivot == null)
         {
-            print("ERROR UnitScript.PlayerPivot == null unitScript.NetID.Value: " + unitScript.NetID.Value);
+            print("ERROR UnitScript.PlayerPivot == null unitScript.NetID.Value: " + unitScript.UnitID);
         }
         _cameraPivotScript.SetNewPivot(unitScript.PlayerPivot);
     }

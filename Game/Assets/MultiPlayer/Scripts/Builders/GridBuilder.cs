@@ -29,6 +29,7 @@ public class GridBuilder : MonoBehaviour
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
+    // It appears that this is no longer needed
     public static void BuildLocationGrid(Vector3 nodeLoc)
     {
         // these are the bottom left corner axis for EACH map node
@@ -59,7 +60,7 @@ public class GridBuilder : MonoBehaviour
 
                     if (_debugNodeSpheres)
                     {
-                        WorldBuilder._nodeBuilder.InstantiateNodeObject(gridLoc, Quaternion.identity, NodeTypes.GridNode, WorldManager._GridContainer.transform);
+                        WorldBuilder._nodeBuilder.InstantiateNodeObject(gridLoc, Vector3.zero, NodeTypes.GridNode, WorldManager._GridContainer.transform);
                     }
 
                     gridLocX += 1;

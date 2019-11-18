@@ -29,14 +29,10 @@ public class MovementManager : MonoBehaviour
     {
         List<Vector3> path = PathFinding.FindPath(unitScript, start, end);
 
-        if (path == null) { print("path == null");  return null; }
+        if (path == null) { return null; }
 
-        print("SetUnitsPath path start >> " + start + " >>>>>> " + path[path.Count - 1]);
+        //print("SetUnitsPath path start >> " + start + " >>>>>> " + path[path.Count - 1]);
 
-        foreach (Vector3 vect in path)
-        {
-            LocationManager.SendCubeDataToSERVER_CLIENT(vect);
-        }
         return path;
     }
 
@@ -46,7 +42,7 @@ public class MovementManager : MonoBehaviour
 
 	}
 
-    public static void CreatePathFindingNodes_CLIENT(UnitScript unitScript, int unitNetID, List<Vector3> path)
+    public static void CreatePathFindingNodes_CLIENT(UnitScript unitScript, Vector3 unitID, List<Vector3> path)
     {
         unitScript.ClearPathFindingNodes();
 
@@ -55,9 +51,9 @@ public class MovementManager : MonoBehaviour
         foreach(Vector3 vect in path)
         {
             CubeLocationScript script = LocationManager.GetLocationScript_CLIENT(vect);
-            script.CreatePathFindingNodeInCube(unitNetID);
+            script.CreatePathFindingNodeInCube(unitID);
             scriptList.Add(script);
-            Debug.Log("pathfinding VISUAL node set at vect: " + vect);
+            //Debug.Log("pathfinding VISUAL node set at vect: " + vect);
         }
 
         unitScript.AssignPathFindingNodes(scriptList);
@@ -65,12 +61,4 @@ public class MovementManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public static void MoveNetworkNode_SERVER(Vector3 nodeID, KeyValuePair<Vector3, Vector3> posRot)
-    {
-        Debug.Log("Moving Map node nodeID: " + nodeID);
-        NetworkNodeContainer nodeScript = LocationManager.GetNetworkNodeContainerScript_SERVER(nodeID);
-        Debug.Log("Moving Map node nodeScript: " + nodeScript);
-
-        nodeScript.MoveNetworkNode(posRot);
-    }
 }

@@ -2,14 +2,20 @@
 
 public class BaseNode : MonoBehaviour {
 
-    private Vector3Int _nodeID;
+    private Vector3 _nodeID;
     private NodeTypes _thisNodeType;
-    private Vector3Int _nodeLocation;
-    private Quaternion _nodeRotation;
+    private Vector3 _nodeLocation;
+    private Vector3 _nodeRotation;
     private int _nodeDirection;
     private int _nodeSize;
     private int _nodeLayerCount;
     private MapPieceTypes _nodeMapPiece;
+
+    private Vector3 _currLoc;
+    private Vector3 _currRot;
+
+    private Vector3 _targetLoc;
+    private Vector3 _targetRot;
 
     public int[] neighbours;
     public bool entrance = false;
@@ -19,18 +25,15 @@ public class BaseNode : MonoBehaviour {
     public WorldNode worldNodeParent;
     public GameObject _nodeCover;
 
-    private bool _followNetworkNode = false;
+    private bool _moveNode = false;
+    private bool _thisClientInControl = false;
     private GameObject _networkNodeContainer;
+    private int _linkedNetworkNodeIndex;
 
     private float _thrust = 0f;
 
     ////////////////////////////////////////////////
 
-    public Vector3Int NodeID
-    {
-        get { return _nodeID; }
-        set { _nodeID = value; }
-    }
     public NodeTypes NodeType
     {
         get { return _thisNodeType; }
@@ -53,12 +56,12 @@ public class BaseNode : MonoBehaviour {
     }
 
 
-    public Quaternion NodeRotation
+    public Vector3 NodeRotation
     {
         get { return _nodeRotation; }
         set { _nodeRotation = value; }
     }
-    public Vector3Int NodeLocation
+    public Vector3 NodeLocation
     {
         get { return _nodeLocation; }
         set { _nodeLocation = value; }
@@ -77,11 +80,43 @@ public class BaseNode : MonoBehaviour {
     }
 
 
-    public GameObject NetworkNodeContainer
+    //////////////////////////////
+    /// Network shit
+    //////////////////////////////
+    public Vector3 NetworkNodeID
     {
-        get { return _networkNodeContainer; }
-        set { _networkNodeContainer = value; }
+        get { return _nodeID; }
+        set { _nodeID = value; }
     }
+    //////////////////////////////
+
+
+    public Vector3 TargetLoc
+    {
+        get { return _targetLoc; }
+        set { _targetLoc = value; }
+    }
+
+    public Vector3 TargetRot
+    {
+        get { return _targetRot; }
+        set { _targetRot = value; }
+    }
+
+
+    //////////////////////////////
+    public Vector3 NodeLoc
+    {
+        get { return _currLoc; }
+        set { _currLoc = value; }
+    }
+
+    public Vector3 NodeRot
+    {
+        get { return _currRot; }
+        set { _currRot = value; }
+    }
+
 
     void Awake()
     {
@@ -89,30 +124,53 @@ public class BaseNode : MonoBehaviour {
 
     void Update()
     {
-        if (_followNetworkNode)
+
+        if (_moveNode)
         {
-            // Rotation
-            //transform.rotation = Vector3.RotateTowards(transform.position, _networkNode.transform.position, (Time.deltaTime * 50f), 0.0f);
-            //transform.rotation = Quaternion.Euler(NetworkNodeContainer.transform.rotation.eulerAngles);
+            _thrust = 10f;
 
             // Moving
-            transform.position = Vector3.MoveTowards(transform.position, NetworkNodeContainer.transform.position, (Time.deltaTime * _thrust));
+            //transform.position = Vector3.MoveTowards(transform.position, TargetLoc, _thrust);
 
-        
-            Vector3 targetDir = NetworkNodeContainer.transform.position - transform.position;
-            Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, Time.deltaTime * 0.1f, 0.0f);
+            //// Rotation
+            //Vector3 eulerRotation = new Vector3(transform.eulerAngles.x, TargetLoc.y, transform.eulerAngles.z);
+            //transform.rotation = Quaternion.Euler(eulerRotation);
 
+            // Rotation
+            //Vector3 newDir = Vector3.RotateTowards(transform.forward, eulerRotation, (Time.deltaTime * 2f) * 5f, 0.0f);
+            //transform.rotation = Quaternion.LookRotation(newDir);
+
+            // Moving
+            //transform.position = Vector3.MoveTowards(transform.position, TargetLoc, (Time.deltaTime * _thrust));
+
+
+            // UMM THIS IS WORKING REALLY FICKEING WELL
+            // Rotation
+            Vector3 targetDir = TargetLoc - transform.position;
+            Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, Time.deltaTime * (_thrust * 0.005f), 0.0f);
             transform.rotation = Quaternion.LookRotation(newDir);
+            // Moving
+            transform.position += transform.forward * Time.deltaTime * (_thrust * 5f);
+            ///////////////////////////////
+
+
+            if (_thisClientInControl)
+            {
+                if (NodeLoc != transform.position || NodeRot != transform.eulerAngles)
+                {
+                    NodeLoc = transform.position;
+                    NodeRot = transform.eulerAngles;
+                    PlayerManager.NetworkAgent.CmdTellServerToUpdateWorldNodePosition(PlayerManager.PlayerAgent.NetworkInstanceID, NetworkNodeID, NodeLoc, NodeRot);
+                }
+            }
         }
-    }
+    } 
+
 
     public virtual bool ActivateMapPiece(bool coverActive = false)
     {
         WorldBuilder.AttachMapToNode(this);
-        //Vector3 testLocVect = new Vector3(200, 0, 0);
-        //Vector3 testRotVect = new Vector3(0, 0, 0);
-        //float thrust = 5;
-        //NetWorkManager.NetworkAgent.CmdTellServerToMoveWorldNode(NodeID, testLocVect, testRotVect, thrust);
+        LocationManager.RemoveUnNeededCubes();
 
         if (coverActive)
         {
@@ -126,10 +184,15 @@ public class BaseNode : MonoBehaviour {
         }
     }
 
-
-    public void MakeNodeFollowNetworkNode(float thrust)
+    public void MakeNodeMoveToLoc(Vector3 loc, Vector3 rot, bool thisClientInControl = false)
     {
-        _thrust = thrust;
-        _followNetworkNode = true;
+        _thisClientInControl = thisClientInControl;
+
+        NodeLoc = transform.position;
+        NodeRot = transform.eulerAngles;
+
+        TargetLoc = loc;
+        TargetRot = rot;
+        _moveNode = true;
     }
 }

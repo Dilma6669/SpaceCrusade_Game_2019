@@ -7,16 +7,6 @@ public class CameraManager : MonoBehaviour
 
     private static CameraManager _instance;
 
-    private static CameraAgent _cameraAgent;
-
-    ////////////////////////////////////////////////
-
-    public static CameraAgent Camera_Agent
-    {
-        get { return _cameraAgent; }
-        set { _cameraAgent = value; }
-    }
-
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
@@ -37,17 +27,20 @@ public class CameraManager : MonoBehaviour
 
     public static void SetUpCameraAndLayers(int playerID, CameraAgent cameraAgent)
     {
-        Camera_Agent = cameraAgent;
+        PlayerManager.CameraAgent = cameraAgent;
 
         KeyValuePair<Vector3Int, Vector3Int> camStartPos = GetCameraStartPosition(playerID);
 
-        Vector3Int camPos = camStartPos.Key;
+        Debug.Log("fuck playerID " + playerID);
+        Debug.Log("fuck camStartPos.key " + camStartPos.Key);
+
+        Vector3 camPos = camStartPos.Key;
         Quaternion camRot = Quaternion.Euler(camStartPos.Value);
 
         PlayerManager.PlayerAgent.SetUpPlayerStartPosition(camPos, camRot);
 
-        Camera_Agent._cameraPivotScript.angleH = camRot.eulerAngles.y;
-        Camera_Agent._cameraPivotScript.angleV = -camRot.eulerAngles.x;
+        PlayerManager.CameraAgent._cameraPivotScript.angleH = camRot.eulerAngles.y;
+        PlayerManager.CameraAgent._cameraPivotScript.angleV = -camRot.eulerAngles.x;
 
         /*
 
@@ -71,7 +64,7 @@ public class CameraManager : MonoBehaviour
     public static void SetCamToOrbitUnit(UnitScript unitScript)
     {
         //print("fuck SetCamToOrbitUnit unit " + unitScript.NetID.Value);
-        Camera_Agent.SetCamAgentToOrbitUnit(unitScript);
+        PlayerManager.CameraAgent.SetCamAgentToOrbitUnit(unitScript);
     }
 
 }

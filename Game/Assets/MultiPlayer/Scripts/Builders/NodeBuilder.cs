@@ -68,8 +68,8 @@ public class NodeBuilder : MonoBehaviour
         cubeObject.transform.eulerAngles = new Vector3(0, rotationY, 0);
 
         CubeLocationScript cubeScript = cubeObject.GetComponent<CubeLocationScript>();
-        cubeScript.CubeMoveable = (gridLoc.x % 2 == 0 && gridLoc.y % 2 == 1) ? true : false;
-        cubeScript.CubeStaticLocVector = gridLoc;
+        cubeScript.CubeMoveable = (gridLoc.x % 2 == 0 && gridLoc.y % 2 == 0 && gridLoc.z % 2 == 0) ? true : false;
+        cubeScript.CubeID = gridLoc;
         cubeScript.CubeLayerID = nodeLayerCount;
         cubeScript.CubeAngle = rotationY;
 
@@ -89,17 +89,17 @@ public class NodeBuilder : MonoBehaviour
         nodeScript.NodeDirection = mapData.direction; // this is the 4 differnt angles for a connector mainly can face to connect with neighbours
         nodeScript.NodeMapPiece = mapData.mapPiece;
         nodeScript.NodeLayerCount = -1;
-        nodeScript.NodeID = mapData.location;
+        nodeScript.NetworkNodeID = new Vector3((int)mapData.mapID.x, (int)mapData.mapID.y, (int)mapData.mapID.z);
         return nodeScript;
     }
 
     // node objects are spawned at bottom corner each map piece
-    public GameObject InstantiateNodeObject(Vector3 loc, Quaternion rot, NodeTypes nodePrefab, Transform parent)
+    public GameObject InstantiateNodeObject(Vector3 loc, Vector3 rot, NodeTypes nodePrefab, Transform parent)
     {
         //Debug.Log("Vector3 (gridLoc): x: " + gridLocX + " y: " + gridLocY + " z: " + gridLocZ);
         GameObject nodeObject = Instantiate(GetNodePrefab(nodePrefab), parent, false);
         nodeObject.transform.position = loc;
-        nodeObject.transform.rotation = rot;
+        nodeObject.transform.localEulerAngles = rot;
         nodeObject.transform.SetParent(parent);
         nodeObject.transform.localScale = new Vector3(1, 1, 1);
 
@@ -175,16 +175,16 @@ public class NodeBuilder : MonoBehaviour
         panelObject.name = "PANEL";
 
         panelScript.cubeScriptParent = cubeScript;
-        panelScript._camera = CameraManager.Camera_Agent._camera;
+        panelScript._camera = PlayerManager.CameraAgent._camera;
 
         return panelObject;
     }
 
     ////////////////////////////////////////////////
 
-    public GameObject CreatePathFindingNode(Transform parent, int unitID)
+    public GameObject CreatePathFindingNode(Transform parent, Vector3 unitID)
     {
-        GameObject nodeObject = InstantiateNodeObject(Vector3.zero, Quaternion.identity, NodeTypes.PathFindingNode, parent);
+        GameObject nodeObject = InstantiateNodeObject(Vector3.zero, Vector3.zero, NodeTypes.PathFindingNode, parent);
         nodeObject.GetComponent<PathFindingNode>().UnitControllerID = unitID;
         return nodeObject;
     }

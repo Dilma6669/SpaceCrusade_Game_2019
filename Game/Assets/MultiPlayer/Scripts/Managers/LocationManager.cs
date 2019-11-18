@@ -9,18 +9,13 @@ public class LocationManager : MonoBehaviour
 
     ////////////////////////////////////////////////
     // SERVER
-    public static Dictionary<Vector3, CubeLocation_SERVER> _SERVER_LocationLookup = new Dictionary<Vector3, CubeLocation_SERVER>();   // movable locations // contains both full and half
-
-    public static Dictionary<int, Vector3> _SERVER_unitLocation = new Dictionary<int, Vector3>(); // sever shit
-
-    public static Dictionary<Vector3, NetworkNodeContainer> _SERVER_nodeLookup = new Dictionary<Vector3, NetworkNodeContainer>();
 
     ////////////////////////////////////////////////
     // CLIENT
     public static Dictionary<Vector3, CubeLocationScript> _LocationLookup = new Dictionary<Vector3, CubeLocationScript>();   // movable locations
     public static Dictionary<Vector3, CubeLocationScript> _LocationHalfLookup = new Dictionary<Vector3, CubeLocationScript>(); // not moveable locations BUT important for neighbour system
 
-    public static Dictionary<int, CubeLocationScript> _unitLocation = new Dictionary<int, CubeLocationScript>(); // sever shit
+    public static Dictionary<Vector3, CubeLocationScript> _unitLocation = new Dictionary<Vector3, CubeLocationScript>(); // sever shit
 
     public static Dictionary<Vector3, BaseNode> _CLIENT_nodeLookup = new Dictionary<Vector3, BaseNode>();
 
@@ -50,135 +45,6 @@ public class LocationManager : MonoBehaviour
     ////// SERVER FUNCTIONS ////////////////////////
     ////////////////////////////////////////////////
 
-    public static void UpdateServerLocation_SERVER(Vector3 vect, bool[] cubeData)
-    {
-        //Debug.Log("UpdateServerLocation_SERVER");
-
-        if (!_SERVER_LocationLookup.ContainsKey(vect))
-        {
-            CubeLocation_SERVER cubeServerScript = ScriptableObject.CreateInstance<CubeLocation_SERVER>();
-            cubeServerScript.SetCubeData(cubeData);
-            _SERVER_LocationLookup.Add(vect, cubeServerScript);
-            //Debug.Log("UpdateServerLocation_SERVER vect " + vect);
-        }
-        else
-        {
-            CubeLocation_SERVER cubeServerScript = _SERVER_LocationLookup[vect];
-            cubeServerScript.SetCubeData(cubeData);
-        }
-    }
-
-    ////////////////////////////////////////////////
-
-    public static CubeLocation_SERVER GetLocationScript_SERVER(Vector3 loc)
-    {
-        //Debug.Log("GetLocationScriptSERVER");
-
-        if (_SERVER_LocationLookup.ContainsKey(loc))
-        {
-            return _SERVER_LocationLookup[loc];
-        }
-        //Debug.LogError("LOCATION DOSENT EXIST SERVER Loc: " + loc);
-        //Debug.LogError("_SERVER_LocationLookup.Count: " + _SERVER_LocationLookup.Count);
-        return null;
-    }
-
-    ////////////////////////////////////////////////
-
-    public static CubeLocation_SERVER CheckIfCanMoveToCube_SERVER(bool unitIsAlien, Vector3 loc)
-    {
-        //Debug.Log("CheckIfCanMoveToCube loc: " + neighloc);
-
-        CubeLocation_SERVER cubeScript = GetLocationScript_SERVER(loc);
-
-        if (cubeScript == null)
-        {
-            Debug.LogError("FAIL move cubeScript == null: " + loc);
-            return null;
-        }
-
-        if (_SERVER_unitLocation.ContainsValue(loc))
-        {
-            Debug.LogWarning("Cube occupied on SERVER: " + loc);
-            return null;
-        }
-
-        if (!unitIsAlien)  // if human
-        {
-            if (!cubeScript.IS_HUMAN_MOVABLE)
-            {
-                Debug.LogWarning("FAIL move error Human walkable/climable/jumpable: " + loc);
-                return null;
-            }
-        }
-        else // alien
-        {
-            if (!cubeScript.IS_ALIEN_MOVABLE)
-            {
-                Debug.LogWarning("FAIL move error ALIEN walkable/climable/jumpable: " + loc);
-                return null;
-            }
-        }
-
-        Debug.Log("SUCCES on SERVER move to loc: " + loc);
-        return cubeScript;
-    }
-
-
-    public static bool SetUnitOnCube_SERVER(UnitScript unitScript, Vector3 loc)
-    {
-        Debug.Log("SetUnitOnCube loc:  " + loc);
-
-        int unitNetId = (int)unitScript.NetID.Value;
-        bool unitcanMoveTo = CheckIfCanMoveToCube_SERVER(unitScript, loc);
-
-        if (unitcanMoveTo)
-        {
-            if (!_SERVER_unitLocation.ContainsKey(unitNetId))
-            {
-                _SERVER_unitLocation.Add(unitNetId, loc);
-            }
-            else
-            {
-                _SERVER_unitLocation[unitNetId] = loc;
-            }
-            return true;
-        }
-        else
-        {
-            Debug.LogError("Unit cannot move to a location");
-            return false;
-        }
-    }
-
-    ////////////////////////////////////////////////
-    ////////////////////////////////////////////////
-
-    public static void SetNetworkNodeContainerScript_SERVER(Vector3 vect, NetworkNodeContainer script)
-    {
-        if (!_SERVER_nodeLookup.ContainsKey(vect))
-        {
-            //Debug.Log("fucken adding normalscript to vect: " + vect + " script: " + script);
-            _SERVER_nodeLookup.Add(vect, script);
-        }
-        else
-        {
-            Debug.LogError("trying to assign script to already taking location!!!");
-        }
-    }
-
-
-    public static NetworkNodeContainer GetNetworkNodeContainerScript_SERVER(Vector3 loc)
-    {
-        //Debug.Log("GetLocationScript");
-
-        if (_SERVER_nodeLookup.ContainsKey(loc))
-        {
-            return _SERVER_nodeLookup[loc];
-        }
-        //Debug.LogError("LOCATION DOSENT EXIST Loc: " + loc);
-        return null;
-    }
 
     ////////////////////////////////////////////////
     ////// CLIENT FUNCTIONS ////////////////////////
@@ -188,7 +54,7 @@ public class LocationManager : MonoBehaviour
     {
         if (!_LocationLookup.ContainsKey(vect))
         {
-            //Debug.Log("fucken adding normalscript to vect: " + vect + " script: " + script);
+             //Debug.Log("Adding normalscript to vect: " + vect);
             _LocationLookup.Add(vect, script);
             return;
         }
@@ -199,7 +65,7 @@ public class LocationManager : MonoBehaviour
     {
         if (!_LocationHalfLookup.ContainsKey(vect))
         {
-            //Debug.Log("fucken adding HALF script to vect: " + vect + " script: " + script);
+             //Debug.Log("Adding normalscript to vect: " + vect);
             _LocationHalfLookup.Add(vect, script);
             return;
         }
@@ -235,20 +101,6 @@ public class LocationManager : MonoBehaviour
 
     ////////////////////////////////////////////////
     
-    
-    public static void SendCubeDataToSERVER_CLIENT(Vector3 vect)
-    {
-        CubeLocationScript script = GetLocationScript_CLIENT(vect);
-        if (script != null)
-        {
-            NetWorkManager.NetworkAgent.CmdTellServerToUpdateLocation(vect, script.GetCubeData());
-        }
-        else
-        {
-            Debug.LogError("GOT AN ISSUE HERE");
-        }
-    }
-    
 
     public static CubeLocationScript CheckIfCanMoveToCube_CLIENT(CubeLocationScript node, Vector3 neighloc, bool unitIsAlien, bool recursiveCheck = false)
     {
@@ -258,7 +110,7 @@ public class LocationManager : MonoBehaviour
 
         if (neighCubeScript == null)
         {
-            Debug.LogError("FAIL move cubeScript == null: " + neighloc);
+            //Debug.LogError("FAIL move cubeScript == null: " + neighloc);
             return null;
         }
 
@@ -267,29 +119,30 @@ public class LocationManager : MonoBehaviour
 
         if (neighCubeScript.CubeIsSlope)
         {
-            Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc);
+            //Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc);
             return null;
         }
 
         if (neighCubeScript.CubeOccupied)
         {
-            Debug.LogWarning("FAIL move Cube is Occupied at vect:" + neighloc);
+            //Debug.LogError("FAIL move Cube is Occupied at vect:" + neighloc);
             return null;
         }
 
-        // for the god damn slopes and moveing through panels (this is ugly but fuck off its working)
 
+        // for the god damn slopes and moveing through panels (this is ugly but fuck off its working)
         if (node != null)
         {
-            Vector3 nodevect = node.CubeStaticLocVector;
+            Vector3 nodevect = node.CubeID;
 
             // check for panel to stop going through panels
-            if (node.CubeStaticLocVector.y > neighloc.y)
+            if (node.CubeID.y > neighloc.y)
             {
                 Vector3 neighHalf = new Vector3(nodevect.x, nodevect.y - 1, nodevect.z);
                 CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
                 if (neighscript.CubeIsPanel)
                 {
+                   //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     return null;
                 }
                 // BOTTOM SLOPES //
@@ -297,6 +150,7 @@ public class LocationManager : MonoBehaviour
                 neighscript = GetLocationScript_CLIENT(neighSlope);
                 if (neighscript.CubeIsSlope)
                 {
+                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     int slopeAngle = neighscript.PanelChildAngle;
                     if (slopeAngle == 90)
                     {
@@ -327,6 +181,7 @@ public class LocationManager : MonoBehaviour
                 CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
                 if (neighscript.CubeIsPanel)
                 {
+                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     return null;
                 }
                 // TOP SLOPES // THIS WILL NEED TO BE IMPLEMENTED AT SOME POINT FOR ALIENS
@@ -334,6 +189,7 @@ public class LocationManager : MonoBehaviour
                 neighscript = GetLocationScript_CLIENT(neighSlope);
                 if (neighscript.CubeIsSlope)
                 {
+                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     int slopeAngle = neighscript.PanelChildAngle;
                     if (slopeAngle == 90)
                     {
@@ -360,10 +216,12 @@ public class LocationManager : MonoBehaviour
             }
         }
 
+
         if (!neighCubeScript.CubePlatform)
         {
             if (recursiveCheck)
             {
+                //Debug.LogError("FAIL !neighCubeScript.CubePlatform: " + neighloc);
                 return null;
             }
 
@@ -373,28 +231,27 @@ public class LocationManager : MonoBehaviour
                 List<Vector3> newNeighVects = node.NeighbourVects;
                 foreach (Vector3 newVect in newNeighVects)
                 {
-                    Debug.Log("RECURSIVE CheckIfCanMoveToCube_CLIENT loc: " + neighloc);
+                    //Debug.Log("RECURSIVE CheckIfCanMoveToCube_CLIENT loc: " + newVect);
                     CubeLocationScript script = CheckIfCanMoveToCube_CLIENT(node, newVect, unitIsAlien, true);
                     if (script != null)
                     {
-                        Debug.Log("SUCCES move to loc: " + newVect);
+                        //Debug.Log("SUCCES move to loc: " + newVect);
                         return neighCubeScript; // if climable neighboursing node return true
                     }
                 }
             }
             ///////
 
-            Debug.LogWarning("FAIL move cubeScript not CubeMoveable: " + neighloc);
+            //Debug.LogError("FAIL move cubeScript not CubeMoveable: " + neighloc);
             return null;
         }
-        
 
 
         if (!unitIsAlien)  // if human
         {
             if (neighCubeScript.IsHumanWalkable == false && neighCubeScript.IsHumanClimbable == false && neighCubeScript.IsHumanJumpable == false)
             {
-                Debug.LogWarning("FAIL move error Human walkable/climable/jumpable: " + neighloc);
+                //Debug.LogError("FAIL move error Human walkable/climable/jumpable: " + neighloc);
                 //Debug.LogFormat("FAIL walkable/climable/jumpable: {0} , {1} , {2}", neighCubeScript.IsHumanWalkable, neighCubeScript.IsHumanClimbable, neighCubeScript.IsHumanJumpable);
                 return null;
             }
@@ -404,13 +261,13 @@ public class LocationManager : MonoBehaviour
         {
             if (neighCubeScript.IsAlienWalkable == false && neighCubeScript.IsAlienClimbable == false && neighCubeScript.IsAlienJumpable == false)
             {
-                Debug.LogWarning("FAIL move error ALIEN walkable/climable/jumpable: " + neighloc);
+               //Debug.LogError("FAIL move error ALIEN walkable/climable/jumpable: " + neighloc);
                 return null;
             }
             neighCubeScript.IS_ALIEN_MOVABLE = true;
         }
 
-        Debug.Log("Unit CAN move to loc: " + neighloc);
+        //Debug.Log("Unit CAN move to loc: " + neighloc);
         return neighCubeScript;
     }
 
@@ -419,40 +276,40 @@ public class LocationManager : MonoBehaviour
 
     public static bool SetUnitOnCube_CLIENT(UnitScript unitScript, Vector3 loc)
     {
-        int unitNetId = (int)unitScript.NetID.Value;
+        Vector3 unitId = unitScript.UnitID;
         CubeLocationScript cubescript = CheckIfCanMoveToCube_CLIENT(unitScript.CubeUnitIsOn, loc, unitScript.UnitCanClimbWalls);
         if (cubescript != null)
         {
-            if (!_unitLocation.ContainsKey(unitNetId))
+            if (!_unitLocation.ContainsKey(unitId))
             {
-                _unitLocation.Add(unitNetId, cubescript);
+                _unitLocation.Add(unitId, cubescript);
             }
             else
             {
-                CubeLocationScript oldCubescript = _unitLocation[unitNetId];
+                CubeLocationScript oldCubescript = _unitLocation[unitId];
                 oldCubescript.CubeOccupied = false;
-                _unitLocation[unitNetId] = cubescript;
+                _unitLocation[unitId] = cubescript;
             }
             cubescript.CubeOccupied = true;
             unitScript.CubeUnitIsOn = cubescript;
-            Debug.Log("SetUnitOnCube loc:  " + loc);
+            //Debug.Log("SetUnitOnCube loc:  " + loc);
             return true;
         }
         else
         {
-            Debug.LogError("Unit cannot move to a location");
+            Debug.LogError("Unit cannot move to a location " + loc);
             return false;
         }
     }
 
     //////////////////////////////////////////////
 
-    public static void SetNodeScriptToLocation_CLIENT(Vector3 vect, BaseNode script)
+    public static void SaveNodeTo_CLIENT(Vector3 vect, BaseNode node)
     {
         if (!_CLIENT_nodeLookup.ContainsKey(vect))
         {
             //Debug.Log("fucken adding normalscript to vect: " + vect + " script: " + script);
-            _CLIENT_nodeLookup.Add(vect, script);
+            _CLIENT_nodeLookup.Add(vect, node);
         }
         else
         {
@@ -461,7 +318,7 @@ public class LocationManager : MonoBehaviour
     }
 
 
-    public static BaseNode GetNodeLocationScript_CLIENT(Vector3 loc)
+    public static BaseNode GetNodeFrom_Client(Vector3 loc)
     {
         //Debug.Log("GetLocationScript");
 
@@ -475,7 +332,6 @@ public class LocationManager : MonoBehaviour
 
     //////////////////////////////////////////////
 
-    ////// Dont think this should be here
     public static void SetCubeActive_CLIENT(bool onOff, Vector3 location)
     {
         if (_activeCube)
@@ -488,7 +344,7 @@ public class LocationManager : MonoBehaviour
         {
             _activeCube = GetLocationScript_CLIENT(location);
             _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
-            UnitsManager.MakeActiveUnitMove_CLIENT(location);
+            UnitsManager.MakeActiveUnitMove_CLIENT(location); // this just checks is a unit is currently selected and then does the moving shit
         }
     }
 
@@ -504,9 +360,17 @@ public class LocationManager : MonoBehaviour
             {
                 if (script.CubeMoveable)
                 {
-                    script.CreatePathFindingNodeInCube((int)unitScript.NetID.Value);
+                    script.CreatePathFindingNodeInCube(unitScript.UnitID);
                 }
             }
+        }
+    }
+
+    public static void RemoveUnNeededCubes()
+    {
+        foreach(CubeLocationScript script in _LocationLookup.Values)
+        {
+            script.DestroyCubeIfNotImportant();
         }
     }
 }

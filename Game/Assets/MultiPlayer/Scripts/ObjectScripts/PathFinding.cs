@@ -92,7 +92,7 @@ public class PathFinding : MonoBehaviour
 
                 if (_debugPathfindingNodes)
                 {
-                    neightbourScript.CreatePathFindingNodeInCube(unit.PlayerControllerID);
+                    neightbourScript.CreatePathFindingNodeInCube(unit.UnitID);
                 }
 
                 _previousNodes.Add(neightbourScript);
@@ -123,7 +123,7 @@ public class PathFinding : MonoBehaviour
 		CubeLocationScript currentNode = endNode;
 
 		while (currentNode != startNode) {
-			path.Add(currentNode.CubeStaticLocVector);
+			path.Add(currentNode.CubeID);
 			currentNode = currentNode._parentPathFinding;
 		}
 		path.Reverse();
@@ -135,9 +135,9 @@ public class PathFinding : MonoBehaviour
 
 
 	private static int GetDistance(CubeLocationScript nodeA, CubeLocationScript nodeB) {
-		int dstX = (int)Mathf.Abs(nodeA.CubeStaticLocVector.x - nodeB.CubeStaticLocVector.x);
-		int dstY = (int)Mathf.Abs(nodeA.CubeStaticLocVector.y - nodeB.CubeStaticLocVector.y);
-        int dstZ = (int)Mathf.Abs(nodeA.CubeStaticLocVector.z - nodeB.CubeStaticLocVector.z);
+		int dstX = (int)Mathf.Abs(nodeA.CubeID.x - nodeB.CubeID.x);
+		int dstY = (int)Mathf.Abs(nodeA.CubeID.y - nodeB.CubeID.y);
+        int dstZ = (int)Mathf.Abs(nodeA.CubeID.z - nodeB.CubeID.z);
 
         if (dstX > dstZ)
             return 14* dstZ + 10* (dstX- dstZ);

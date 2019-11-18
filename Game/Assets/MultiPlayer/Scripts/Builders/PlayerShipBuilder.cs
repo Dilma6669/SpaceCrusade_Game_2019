@@ -28,25 +28,32 @@ public class PlayerShipBuilder : MonoBehaviour
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
-    public static void CreatePlayerShip(BasePlayerData playerData, Vector3Int startPos, Vector3Int startRot)
+    public static void CreatePlayerShip(NetworkNodeStruct networkNodeStruct, int playerID)
     {
         MapPieceStruct mapData = new MapPieceStruct()
         {
             mapPiece = MapPieceTypes.MapPiece_Corridor_01,
             nodeType = NodeTypes.WorldNode,
-            location = startPos,
-            rotation = Quaternion.Euler(0, 180, 0),
-            direction = playerData.playerID,
+            location = networkNodeStruct.CurrLoc,
+            rotation = networkNodeStruct.CurrRot,
+            direction = 0,
             parentNode = WorldManager._WorldContainer.transform
         };
 
         WorldNode worldNode = WorldBuilder._nodeBuilder.CreateNode<WorldNode>(mapData);
-        LocationManager.SetNodeScriptToLocation_CLIENT(startPos, worldNode);
+
+        LocationManager.SaveNodeTo_CLIENT(networkNodeStruct.NodeID, worldNode);
+
+        BasePlayerData playerData = PlayerManager.GetPlayerData(playerID);
+
+        Debug.Log("fuck worldNode >>>>> " + worldNode.transform.position);
+
+        worldNode.transform.eulerAngles = new Vector3(0, 90, 0);
 
         Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes = MapNodeBuilder.CreateMapNodes(new List<WorldNode>() { worldNode }, true, playerData.shipSize, playerData.shipMapPieces);
 
-        if (NetWorkManager.NetworkAgent._isLocalPlayer)
-        {
+        //if (playerID == PlayerManager.PlayerID)
+        //{
             foreach (KeyValuePair<WorldNode, List<MapNode>> element in worldNodeAndWrapperNodes)
             {
                 List<MapNode> mapNodes = element.Value;
@@ -56,11 +63,28 @@ public class PlayerShipBuilder : MonoBehaviour
                     mapNode.ActivateMapPiece(true);
                 }
             }
-        }
+        //}
 
-        KeyValuePair<Vector3Int, Vector3Int> posRot = PlayerManager.GetPlayerStartPosition(playerData.playerID);
-        worldNode.transform.rotation = Quaternion.Euler(posRot.Value);
+        //worldNode.transform.SetParent(networkNode.transform);
+        //worldNode.transform.position = networkNode.transform.position;
+        //worldNode.transform.localEulerAngles = new Vector3(0, 0, 0);
+        worldNode.GetComponent<WorldNode>().NetworkNodeID = networkNodeStruct.NodeID;
+
+        if (playerData.playerID == PlayerManager.PlayerID)
+        {
+            MoveShip(playerData, worldNode);
+            PlayerManager.PlayersShipLoaded();
+        }
     }
 
+
+    public static void MoveShip(BasePlayerData playerData, WorldNode worldNode)
+    {
+        Vector3 testLocVect = PlayerManager.GetTESTShipMovementPositions(playerData.playerID);
+        Vector3 testRotVect = Vector3.zero;
+        float thrust = 5;
+
+        worldNode.MakeNodeMoveToLoc(testLocVect, testRotVect, true);
+    }
 
 }

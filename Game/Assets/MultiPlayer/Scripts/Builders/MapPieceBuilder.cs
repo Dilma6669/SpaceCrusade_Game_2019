@@ -94,14 +94,14 @@ public class MapPieceBuilder : MonoBehaviour {
 
     private static void BuildMapsByIEnum<T>(T node) where T : BaseNode
     {
-        Vector3Int nodeLoc = node.NodeLocation;
+        Vector3 nodeLoc = node.NodeLocation;
         int rotations = node.NodeDirection;
 
         int startGridLocX = (int)nodeLoc.x - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesXZ / 2);
         int startGridLocY = (int)nodeLoc.y - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesY / 2);
         int startGridLocZ = (int)nodeLoc.z - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesXZ / 2);
 
-        Vector3Int GridLoc;
+        Vector3 GridLoc;
 
         List<int[]> layers = GetMapPiece(node.NodeMapPiece);
 
@@ -160,7 +160,7 @@ public class MapPieceBuilder : MonoBehaviour {
 
                 for (int x = 0; x < MapSettings.sizeOfMapPiecesXZ; x++)
                 {
-                    GridLoc = new Vector3Int(objectsCountX, objectsCountY, objectsCountZ);
+                    GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
 
                     if (layers != null && layers[cubeCounter] != null)
                     {

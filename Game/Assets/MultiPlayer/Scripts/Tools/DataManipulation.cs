@@ -8,7 +8,7 @@ public class DataManipulation : MonoBehaviour {
         List<Vector3> vects = new List<Vector3>();
         foreach (CubeLocationScript cube in cubesScripts)
         {
-            Vector3 vect = cube.CubeStaticLocVector;
+            Vector3 vect = cube.CubeID;
             vects.Add(vect);
         }
         return vects;
@@ -30,6 +30,15 @@ public class DataManipulation : MonoBehaviour {
         }
         return intArray;
     }
+
+
+    ///////// DUMB not being used leaving here incase for future
+    public static int ConvertVectorIntoInt(Vector3 vect)
+    {
+        return Mathf.Abs(int.Parse(vect.x.ToString("000") + vect.y.ToString("000"))); // + vect.z.ToString("000"))); -- commented this out because all 3 vectors created integer too long
+    }
+
+
 
     public static List<Vector3> ConvertIntArrayIntoVectors(int[] intArray)
     {

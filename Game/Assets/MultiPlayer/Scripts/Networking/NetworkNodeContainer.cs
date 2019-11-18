@@ -4,56 +4,45 @@ using UnityEngine.Networking;
 
 public class NetworkNodeContainer : NetworkBehaviour
 {
-    public Vector3 _nodeID;
+    private bool _moveNode;
 
-    ////////////////////////////////////////////////
+    public Vector3 _posToMoveTo;
+    public Vector3 _rotToMoveTo;
 
-    private Rigidbody rigidbody;
-
-    private bool _moveNode = false;
-
-    ////////////////////////////////////////////////
-
-    public Vector3 ContainerNodeID
-    {
-        get { return _nodeID; }
-        set { _nodeID = value; }
-    }
+    private float _thrust;
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
     void Awake()
     {
-        rigidbody = GetComponent<Rigidbody>();
+        _moveNode = false;
+        Transform parent = WorldManager._NetworkContainer.transform;
+        transform.SetParent(parent);
+
+        _thrust = 10;
     }
 
-
-    public virtual void EnableNodeRigidBody(bool OnOff)
+    void Update()
     {
-        if (rigidbody == null)
+        if (_moveNode)
         {
-            gameObject.AddComponent<Rigidbody>();
-            rigidbody = GetComponent<Rigidbody>();
-        }
+            // Moving
+            transform.position = Vector3.MoveTowards(transform.position, _posToMoveTo, (Time.deltaTime * _thrust));
 
-        rigidbody.useGravity = false;
-
-        if (OnOff)
-        {
-            rigidbody.isKinematic = false;
-        }
-        else
-        {
-            rigidbody.isKinematic = true;
+            // Rotation
+            Vector3 targetDir = _posToMoveTo - transform.position;
+            Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, Time.deltaTime * 0.1f, 0.0f);
+            transform.rotation = Quaternion.LookRotation(newDir);
         }
     }
 
-    public virtual void MoveNetworkNode(KeyValuePair<Vector3, Vector3> posRot)
+    public void MoveNetworkNode(KeyValuePair<Vector3, Vector3> posRot, float thrust)
     {
-        EnableNodeRigidBody(true);
-
-        transform.position = posRot.Key;
-        transform.rotation = Quaternion.Euler(posRot.Value);
+        _posToMoveTo = posRot.Key;
+        _rotToMoveTo = posRot.Value;
+        _thrust = thrust;
+        _moveNode = true;
     }
+
 }

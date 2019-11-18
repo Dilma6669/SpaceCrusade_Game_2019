@@ -7,23 +7,13 @@ public class UnitsManager : MonoBehaviour
 
     private static UnitsManager _instance;
 
-    private static UnitsAgent _unitsAgent;
-
     ////////////////////////////////////////////////
 
     public static UnitBuilder _unitBuilder;
 
     ////////////////////////////////////////////////
 
-    public static UnitsAgent UnitsAgent
-    {
-        get { return _unitsAgent; }
-        set { _unitsAgent = value; }
-    }
-
-    ////////////////////////////////////////////////
-
-    public static Dictionary<int, Dictionary<int, UnitScript>> _unitObjects;
+    public static Dictionary<int, Dictionary<Vector3, UnitScript>> _unitObjectsByPlayerID;
 
     private static UnitScript _activeUnit = null;
 
@@ -46,47 +36,84 @@ public class UnitsManager : MonoBehaviour
     {
         _unitBuilder = transform.Find("UnitBuilder").GetComponent<UnitBuilder>();
 
-        _unitObjects = new Dictionary<int, Dictionary<int, UnitScript>> ();
+        _unitObjectsByPlayerID = new Dictionary<int, Dictionary<Vector3, UnitScript>>();
     }
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    public static void LoadPlayersUnits(Vector3 worldStartLoc)
+    public static void LoadPlayersUnits()
     {
         List<UnitStruct> units = PlayerManager.PlayerUnitData;
 
-        int unitCount = 0;
-        foreach (UnitStruct unit in units)
+        Debug.Log("LoadPlayersUnits <<<<<<< for player " + PlayerManager.PlayerID);
+
+        for (int i = 0; i < PlayerManager.PlayerNumUnits; i++)
         {
-            unitCount += 1;
+            UnitStruct unitData = units[i];
 
-            Vector3 localStart = unit.UnitStartingLocalLoc;
-            Vector3 worldStart = new Vector3(localStart.x + worldStartLoc.x, localStart.y + worldStartLoc.y, localStart.z + worldStartLoc.z);
-
-            bool lastUnit = (unitCount == units.Count) ? true : false;
-            CreateUnitOnNetwork(unit, worldStart, worldStartLoc, lastUnit);
+           PlayerManager.NetworkAgent.CmdTellServerToSpawnPlayerUnit(PlayerManager.PlayerAgent.NetworkInstanceID, unitData, PlayerManager.PlayerID);
         }
     }
 
     ////////////////////////////////////////////////
 
-    public static void AllPlayerUnitsHaveBeenLoaded()
+    public static void CreateUnitOnClient(NetworkNodeStruct networkNodeStruct, int playerID) // an attempt to make units like ships
     {
-        AssignCameraToActiveUnit();
+        CubeLocationScript cubeScript = LocationManager.GetLocationScript_CLIENT(networkNodeStruct.NodeID);
+
+        if (cubeScript != null)
+        {
+            GameObject prefab = UnitsManager._unitBuilder.GetUnitModel(networkNodeStruct.unitData.UnitModel);
+            GameObject unit = Instantiate(prefab, cubeScript.gameObject.transform, false);
+            unit.transform.SetParent(cubeScript.gameObject.transform);
+            unit.transform.localPosition = networkNodeStruct.CurrLoc;
+            unit.transform.localEulerAngles = networkNodeStruct.CurrRot;
+
+            UnitScript unitScript = unit.GetComponent<UnitScript>();
+
+            unitScript.UnitData = networkNodeStruct.unitData;
+            unitScript.UnitID = networkNodeStruct.NodeID;
+            unitScript.PlayerControllerID = playerID;
+            unitScript.UnitModel = networkNodeStruct.unitData.UnitModel;
+            unitScript.UnitCanClimbWalls = networkNodeStruct.unitData.UnitCanClimbWalls;
+            unitScript.UnitCombatStats = networkNodeStruct.unitData.UnitCombatStats;
+
+            LocationManager.SetUnitOnCube_CLIENT(unit.GetComponent<UnitScript>(), unitScript.UnitID); //sets CubeUnitIsOn
+
+            AddUnitToGame(playerID, unitScript.UnitID, unitScript); // add unit to generic unit manager pool
+            PlayerManager.PlayerAgent.GetComponent<UnitsAgent>().AddUnitToUnitAgent(unitScript); // add unit to a more specific player unit pool
+
+            if (PlayerManager.PlayerID == playerID)
+            {
+                if (networkNodeStruct.unitData.UnitCombatStats[0] == 1) // if rank is 'Captain'???? then make active
+                {
+                    SetUnitActive(true, playerID, unitScript.UnitID);
+                    AssignCameraToActiveUnit();
+                }
+            }
+            Debug.Log("Unit Succesfully created on CLIENT: " + unitScript.UnitID);
+        }
+        else
+        {
+            Debug.LogError("Got a problem here > " + networkNodeStruct.NodeID);
+        }
     }
 
     ////////////////////////////////////////////////
 
-    public static void AddUnitToGame(int playerContID, int unitID, UnitScript unit)
+    public static void AddUnitToGame(int playerContID, Vector3 unitID, UnitScript unit)
     {
-        if (_unitObjects.ContainsKey(playerContID))
+        if (_unitObjectsByPlayerID.ContainsKey(playerContID))
         {
-            Dictionary<int, UnitScript> unitList = _unitObjects[playerContID];
+            Dictionary<Vector3, UnitScript> unitList = _unitObjectsByPlayerID[playerContID];
+
+            //Debug.Log("unitID " + unitID);
 
             if (!unitList.ContainsKey(unitID))
             {
                 unitList.Add(unitID, unit);
+                _unitObjectsByPlayerID[playerContID] = unitList;
             }
             else
             {
@@ -95,17 +122,17 @@ public class UnitsManager : MonoBehaviour
         }
         else
         {
-            Dictionary<int, UnitScript> unitList = new Dictionary<int, UnitScript>();
+            Dictionary<Vector3, UnitScript> unitList = new Dictionary<Vector3, UnitScript>();
             unitList.Add(unitID, unit);
-            _unitObjects.Add(playerContID, unitList);
+            _unitObjectsByPlayerID.Add(playerContID, unitList);
         }
     }
 
     ////////////////////////////////////////////////
 
-    public static void SetUnitActive(bool onOff, int playerContID, int unitID)
+    public static void SetUnitActive(bool onOff, int playerContID, Vector3 unitID)
     {
-        UnitScript unit = _unitObjects[playerContID][unitID];
+        UnitScript unit = _unitObjectsByPlayerID[playerContID][unitID];
 
         if (unit == null)
         {
@@ -120,12 +147,10 @@ public class UnitsManager : MonoBehaviour
 
         if (onOff)
         {
-            if (_activeUnit.NetID.Value != unit.NetID.Value)
+            if (_activeUnit.UnitID != unit.UnitID)
             {
                 _activeUnit.DeActivateUnit();
             }
-
-            print("SetUnitActive <<<<<<<<<<<<<<<<<<<< unitId: " + unit.NetID.Value);
 
             _activeUnit = unit;
             _activeUnit.ActivateUnit();
@@ -134,7 +159,7 @@ public class UnitsManager : MonoBehaviour
         }
         else
         {
-            if (_activeUnit.NetID.Value != unit.NetID.Value)
+            if (_activeUnit.UnitID != unit.UnitID)
             {
                 Debug.LogError("should not be here Unit is active and another unit is tying to get turned off");
             }
@@ -160,24 +185,23 @@ public class UnitsManager : MonoBehaviour
     {
         if (_activeUnit)
         {
-            List<Vector3> movePath = MovementManager.SetUnitsPath(_activeUnit, _activeUnit.CubeUnitIsOn.CubeStaticLocVector, posToMoveTo);
+            List<Vector3> movePath = MovementManager.SetUnitsPath(_activeUnit, _activeUnit.CubeUnitIsOn.CubeID, posToMoveTo);
 
-            int[] pathInts = DataManipulation.ConvertVectorsIntoIntArray(movePath);
+            //int[] pathInts = DataManipulation.ConvertVectorsIntoIntArray(movePath);
 
-            int unitID = (int)_activeUnit.netId.Value;
-            MovementManager.CreatePathFindingNodes_CLIENT(_activeUnit, unitID, movePath);
+            if (movePath != null)
+            {
+                int unitID = (int)_activeUnit.netId.Value;
+                MovementManager.CreatePathFindingNodes_CLIENT(_activeUnit, _activeUnit.UnitID, movePath);
 
-            NetWorkManager.NetworkAgent.CmdTellServerToMoveUnit(PlayerManager.PlayerAgent.NetID, _activeUnit.NetID, pathInts);
+                //PlayerManager.NetworkAgent.CmdTellServerToMoveUnit(PlayerManager.PlayerAgent.NetworkInstanceID, _activeUnit.NetID, pathInts);
+
+                _activeUnit.GetComponent<MovementScript>().MoveUnit(movePath);
+            }
 
         }
     }
 
     ////////////////////////////////////////////////
-
-    private static void CreateUnitOnNetwork(UnitStruct unitData, Vector3 worldStart, Vector3 nodeID, bool lastUnit)
-    {
-        int playerID = PlayerManager.PlayerID;
-        NetWorkManager.NetworkAgent.CmdTellServerToSpawnPlayerUnit(PlayerManager.PlayerAgent.NetID, unitData, playerID, worldStart, nodeID, lastUnit);
-    }
 
 }
