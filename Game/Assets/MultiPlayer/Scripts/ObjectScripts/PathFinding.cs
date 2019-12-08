@@ -135,7 +135,8 @@ public class PathFinding : MonoBehaviour
 
 
 	private static int GetDistance(CubeLocationScript nodeA, CubeLocationScript nodeB) {
-		int dstX = (int)Mathf.Abs(nodeA.CubeID.x - nodeB.CubeID.x);
+
+        int dstX = (int)Mathf.Abs(nodeA.CubeID.x - nodeB.CubeID.x);
 		int dstY = (int)Mathf.Abs(nodeA.CubeID.y - nodeB.CubeID.y);
         int dstZ = (int)Mathf.Abs(nodeA.CubeID.z - nodeB.CubeID.z);
 

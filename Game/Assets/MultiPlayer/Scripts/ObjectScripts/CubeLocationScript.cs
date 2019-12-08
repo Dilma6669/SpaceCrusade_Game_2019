@@ -14,9 +14,11 @@ public class CubeLocationScript : MonoBehaviour {
     public bool _cubeIsSlope;
     public bool _cubeIsPanel;
 
+    public CubeLocationScript _platform_Panel_Cube; // this is the neighbouring cube that has a panel in it
+
     bool _cubeVisible;
     bool _cubSelected;
-    bool _cubeOccupied; // If a guy is on square
+    public bool _cubeOccupied; // If a guy is on square
 
     public bool _isHumanWalkable;
     public bool _isHumanClimbable;
@@ -30,7 +32,6 @@ public class CubeLocationScript : MonoBehaviour {
     public bool _isAlienMoveable;
 
     // panel objects
-    int _panelChildAngle;
     public GameObject _activePanel;
     public PanelPieceScript _panelScriptChild = null;
 
@@ -157,14 +158,6 @@ public class CubeLocationScript : MonoBehaviour {
     {
         get { return _isAlienMoveable; }
         set { _isAlienMoveable = value; }
-    }
-
-
-
-    public int PanelChildAngle
-    {
-        get { return _panelChildAngle; }
-        set { _panelChildAngle = value; }
     }
 
 

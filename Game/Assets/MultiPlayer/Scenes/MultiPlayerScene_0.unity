@@ -3799,9 +3799,8 @@ MonoBehaviour:
   m_AutoCreatePlayer: 1
   m_PlayerSpawnMethod: 0
   m_OfflineScene: MutliplayScreen
-  m_OnlineScene: MutliplayScreen
-  m_SpawnPrefabs:
-  - {fileID: 1233077309448978, guid: 94ebeb194668a76449ae5f1d660fae7e, type: 3}
+  m_OnlineScene: MultiPlayerScene_0
+  m_SpawnPrefabs: []
   m_CustomConfig: 0
   m_MaxConnections: 4
   m_ConnectionConfig:
@@ -3844,7 +3843,7 @@ MonoBehaviour:
     m_MaxTimerTimeout: 12000
     m_MinNetSimulatorTimeout: 1
     m_MaxNetSimulatorTimeout: 12000
-  m_Channels: 0500000000000000
+  m_Channels: 
   m_UseWebSockets: 0
   m_UseSimulator: 0
   m_SimulatedLatency: 1

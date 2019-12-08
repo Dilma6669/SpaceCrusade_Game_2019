@@ -136,7 +136,6 @@
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectScripts\MovementScript.cs" />
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectScripts\PanelPieceScript.cs" />
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectScripts\PathFinding.cs" />
-    <Compile Include="Assets\MultiPlayer\Scripts\ObjectScripts\UnitContainer.cs" />
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectScripts\UnitScript.cs" />
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectStructs\CubeStruct.cs" />
     <Compile Include="Assets\MultiPlayer\Scripts\ObjectStructs\MapPieceStruct.cs" />

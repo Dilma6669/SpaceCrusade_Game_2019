@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 
-public class UnitScript : NetworkBehaviour
+public class UnitScript : MonoBehaviour
 {
     ////////////////////////////////////////////////
 
@@ -17,7 +16,6 @@ public class UnitScript : NetworkBehaviour
     private Vector3 _unitID;
     private Vector3 _startingWorldLoc;
     private int _playerControllerId;
-    private NetworkInstanceId _netID;
     private Vector3 _nodeIDUnitIsOn;
     public CubeLocationScript _cubeUnitIsOn;
     private int _pathNodeCount;
@@ -155,7 +153,7 @@ public class UnitScript : NetworkBehaviour
     {
         ClearPathFindingNodes();
         _pathFindingNodes = nodes;
-        SetUnitToNextLocation_CLIENT();
+        SetUnitToNextLocation_CLIENT(_pathFindingNodes[_pathNodeCount].CubeID);
     }
 
     public void ClearPathFindingNodes()
@@ -168,14 +166,14 @@ public class UnitScript : NetworkBehaviour
         _pathNodeCount = 0;
     }
 
-    public void SetUnitToNextLocation_CLIENT()
+    public void SetUnitToNextLocation_CLIENT(Vector3 vect)
     {
-        if (_pathNodeCount < _pathFindingNodes.Count)
-        {
-            Vector3 vect = _pathFindingNodes[_pathNodeCount].CubeID;
+        //if (_pathNodeCount < _pathFindingNodes.Count)
+        //{
+            //Vector3 vect = _pathFindingNodes[_pathNodeCount].CubeID;
             CubeLocationScript script = LocationManager.GetLocationScript_CLIENT(vect);
             CubeUnitIsOn = script;
-        }
+        //}
         _pathNodeCount++;
     }
 

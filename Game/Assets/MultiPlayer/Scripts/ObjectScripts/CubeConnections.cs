@@ -113,7 +113,6 @@ public class CubeConnections : MonoBehaviour
     }
 
 
-
     private static void SetUpFloorPanel(CubeLocationScript neighbourHalfScript, PanelPieceScript panelScript) {
 
         Vector3 cubeHalfLoc = neighbourHalfScript.CubeID;
@@ -123,11 +122,13 @@ public class CubeConnections : MonoBehaviour
         if (cubeScriptLeft != null) {
             panelScript.cubeScriptLeft = cubeScriptLeft;
 			panelScript.cubeLeftVector = leftVect;
-			panelScript.leftPosNode = new Vector3 (0, 0, 0);
+            cubeScriptLeft._platform_Panel_Cube = neighbourHalfScript;
 
             SetHumanCubeRules(cubeScriptLeft, false, false, false);
             SetAlienCubeRules(cubeScriptLeft, true, true, true);
-		}
+            cubeScriptLeft.IS_HUMAN_MOVABLE = false;
+            cubeScriptLeft.IS_ALIEN_MOVABLE = true;
+        }
         else
         {
             Debug.LogError("Got an issue here");
@@ -140,10 +141,12 @@ public class CubeConnections : MonoBehaviour
         {
             panelScript.cubeScriptRight = cubeScriptRight;
             panelScript.cubeRightVector = rightVect;
-            panelScript.rightPosNode = new Vector3(0, 0, 0);
+            cubeScriptRight._platform_Panel_Cube = neighbourHalfScript;
 
             SetHumanCubeRules(cubeScriptRight, true, true, true);
             SetAlienCubeRules(cubeScriptRight, true, true, true);
+            cubeScriptRight.IS_HUMAN_MOVABLE = true;
+            cubeScriptRight.IS_ALIEN_MOVABLE = true;
         }
         else
         {
@@ -153,13 +156,11 @@ public class CubeConnections : MonoBehaviour
         if (cubeScriptLeft == null) {
 			panelScript.cubeScriptLeft = panelScript.cubeScriptRight;
 			panelScript.cubeLeftVector = panelScript.cubeRightVector;
-			panelScript.leftPosNode = panelScript.rightPosNode;
             //Debug.LogWarning("cubeScript == null so making neighbours same cube");
         }
 		if (cubeScriptRight == null) {
 			panelScript.cubeScriptRight = panelScript.cubeScriptLeft;
 			panelScript.cubeRightVector = panelScript.cubeLeftVector;
-			panelScript.rightPosNode = panelScript.leftPosNode;
             //Debug.LogWarning("cubeScript == null so making neighbours same cube");
         }
 	}
@@ -167,111 +168,90 @@ public class CubeConnections : MonoBehaviour
 
 	private static void SetUpWallPanel(CubeLocationScript neighbourHalfScript, PanelPieceScript panelScript) {
 
-        CubeLocationScript cubeScriptLeft = null;
-        CubeLocationScript cubeScriptRight = null;
-
         Vector3 cubeHalfLoc = neighbourHalfScript.CubeID;
 
         int cubeAngle = neighbourHalfScript.CubeAngle;
-		int panelAngle = panelScript.panelAngle;
+		int panelAngle = panelScript._panelYAxis;
 
 		//panelScript._isLadder = true;
 
 		int result = (cubeAngle - panelAngle);
-		result = (((result + 180) % 360 + 360) % 360) - 180;
-		//Debug.Log ("cubeAngle: " + cubeAngle + " panelAngle: " + panelAngle + " result: " + result);
+		result = (((result + 180) + 360) % 360) - 180; //result = (((result + 180) % 360 + 360) % 360) - 180;
 
-		if (result == 180 || result == -180 || result == 0) { // Down
-            Vector3 leftVect = new Vector3 (cubeHalfLoc.x, cubeHalfLoc.y, cubeHalfLoc.z - 1);
-            cubeScriptLeft = LocationManager.GetLocationScript_CLIENT(leftVect);
-			if (cubeScriptLeft != null) {
-				panelScript.cubeScriptLeft = cubeScriptLeft;
-				panelScript.cubeLeftVector = leftVect;
-				panelScript.leftPosNode = new Vector3 (0, 0, 0);
+        CubeLocationScript cubeScriptLeft = null;
+        CubeLocationScript cubeScriptRight = null;
 
-                if (panelScript._isLadder)
-                {
-                    SetHumanCubeRules(cubeScriptLeft, true, true, true);
-                }
-                else
-                {
-                    SetHumanCubeRules(cubeScriptLeft, false, false, false);
-                }
+        Vector3 leftVect = Vector3.zero;
+        Vector3 rightVect = Vector3.zero;
 
-                SetAlienCubeRules(cubeScriptLeft, true, true, true);
-            }
-
-            Vector3 rightVect = new Vector3 (cubeHalfLoc.x, cubeHalfLoc.y, cubeHalfLoc.z + 1);
-			cubeScriptRight = LocationManager.GetLocationScript_CLIENT(rightVect);
-			if (cubeScriptRight != null) {
-				panelScript.cubeScriptRight = cubeScriptRight;
-				panelScript.cubeRightVector = rightVect;
-				panelScript.rightPosNode = new Vector3 (0, 0, 0);
-
-                if (panelScript._isLadder)
-                {
-                    SetHumanCubeRules(cubeScriptRight, true, true, true);
-                }
-                else
-                {
-                    SetHumanCubeRules(cubeScriptRight, false, false, false);
-                }
-
-                SetAlienCubeRules(cubeScriptRight, true, true, true);
-            }
-
-		} else if (result == 90 || result == -90) { //across 
-
-            Vector3 leftVect = new Vector3 (cubeHalfLoc.x - 1, cubeHalfLoc.y, cubeHalfLoc.z);
-			cubeScriptLeft = LocationManager.GetLocationScript_CLIENT(leftVect);
-			if (cubeScriptLeft != null) {
-				panelScript.cubeScriptLeft = cubeScriptLeft;
-				panelScript.cubeLeftVector = leftVect;
-				panelScript.leftPosNode = new Vector3 (0, 0, 0);
-
-                if (panelScript._isLadder)
-                {
-                    SetHumanCubeRules(cubeScriptLeft, true, true, true);
-                }
-                else
-                {
-                    SetHumanCubeRules(cubeScriptLeft, false, false, false);
-                }
-
-                SetAlienCubeRules(cubeScriptLeft, true, true, true);
-            }
-
-            Vector3 rightVect = new Vector3 (cubeHalfLoc.x + 1, cubeHalfLoc.y, cubeHalfLoc.z);
-			cubeScriptRight = LocationManager.GetLocationScript_CLIENT(rightVect);
-			if (cubeScriptRight != null) {
-				panelScript.cubeScriptRight = cubeScriptRight;
-				panelScript.cubeRightVector = rightVect;
-				panelScript.rightPosNode = new Vector3 (0, 0, 0);
-
-                if (panelScript._isLadder)
-                {
-                    SetHumanCubeRules(cubeScriptRight, true, true, true);
-                }
-                else
-                {
-                    SetHumanCubeRules(cubeScriptRight, false, false, false);
-                }
-
-                SetAlienCubeRules(cubeScriptRight, true, true, true);
-            }
-        } else {
-			Debug.Log ("SOMETHING weird: cubeAngle: " + cubeAngle + " panelAngle: " + panelAngle + " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        if (result == 180 || result == -180 || result == 0) // Down
+        {
+            leftVect = new Vector3(cubeHalfLoc.x, cubeHalfLoc.y, cubeHalfLoc.z - 1);
+            rightVect = new Vector3(cubeHalfLoc.x, cubeHalfLoc.y, cubeHalfLoc.z + 1);
+        }
+        else if (result == 90 || result == -90)  //across 
+        {
+            leftVect = new Vector3(cubeHalfLoc.x - 1, cubeHalfLoc.y, cubeHalfLoc.z);
+            rightVect = new Vector3(cubeHalfLoc.x + 1, cubeHalfLoc.y, cubeHalfLoc.z);
+        }
+        else
+        {
+			Debug.Log("SOMETHING weird: cubeAngle: " + cubeAngle + " panelAngle: " + panelAngle + " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 		}
+
+        //Debug.Log ("cubeAngle: " + cubeAngle + " panelAngle: " + panelAngle + " result: " + result);
+
+        cubeScriptLeft = LocationManager.GetLocationScript_CLIENT(leftVect);
+        if (cubeScriptLeft != null)
+        {
+            panelScript.cubeScriptLeft = cubeScriptLeft;
+            panelScript.cubeLeftVector = leftVect;
+            cubeScriptLeft._platform_Panel_Cube = neighbourHalfScript;
+
+            if (panelScript._isLadder)
+            {
+                SetHumanCubeRules(cubeScriptLeft, true, true, true);
+                cubeScriptLeft.IS_HUMAN_MOVABLE = true;
+            }
+            else
+            {
+                SetHumanCubeRules(cubeScriptLeft, false, false, false);
+                cubeScriptLeft.IS_HUMAN_MOVABLE = false;
+            }
+
+            SetAlienCubeRules(cubeScriptLeft, true, true, true);
+            cubeScriptLeft.IS_ALIEN_MOVABLE = true;
+        }
+
+         cubeScriptRight = LocationManager.GetLocationScript_CLIENT(rightVect);
+        if (cubeScriptRight != null)
+        {
+            panelScript.cubeScriptRight = cubeScriptRight;
+            panelScript.cubeRightVector = rightVect;
+            cubeScriptRight._platform_Panel_Cube = neighbourHalfScript;
+
+            if (panelScript._isLadder)
+            {
+                SetHumanCubeRules(cubeScriptRight, true, true, true);
+                cubeScriptRight.IS_HUMAN_MOVABLE = true;
+            }
+            else
+            {
+                SetHumanCubeRules(cubeScriptRight, false, false, false);
+                cubeScriptRight.IS_HUMAN_MOVABLE = false;
+            }
+
+            SetAlienCubeRules(cubeScriptRight, true, true, true);
+            cubeScriptRight.IS_ALIEN_MOVABLE = true;
+        }
 
 		if (cubeScriptLeft == null) {
 			panelScript.cubeScriptLeft = panelScript.cubeScriptRight;
 			panelScript.cubeLeftVector = panelScript.cubeRightVector;
-			panelScript.leftPosNode = panelScript.rightPosNode;
 		}
 		if (cubeScriptRight == null) {
 			panelScript.cubeScriptRight = panelScript.cubeScriptLeft;
 			panelScript.cubeRightVector = panelScript.cubeLeftVector;
-			panelScript.rightPosNode = panelScript.leftPosNode; 
 		}
 	}
 
@@ -282,43 +262,62 @@ public class CubeConnections : MonoBehaviour
     { 
         Vector3 cubeLoc = cubeScript.CubeID;
 
-        Vector3 rightVect = new Vector3(cubeLoc.x, cubeLoc.y + 2, cubeLoc.z); // OnTop ( I think)
+        Vector3 rightVect = new Vector3(cubeLoc.x, cubeLoc.y + 2, cubeLoc.z);
+        Vector3 leftVect = new Vector3(cubeLoc.x, cubeLoc.y, cubeLoc.z); // Underneath ( I think)
+
+        //int panelYAxis = panelScript._panelYAxis;
+
+        //if (panelYAxis == 180 || panelYAxis == -180 || panelYAxis == 0) // Down
+        //{
+        //    rightVect = new Vector3(cubeLoc.x, cubeLoc.y + 1, cubeLoc.z + 1); // OnTop ( I think)
+        //}
+        //else if (panelYAxis == 90 || panelYAxis == -90 || panelYAxis == 270 )  //across 
+        //{
+        //    rightVect = new Vector3(cubeLoc.x + 1, cubeLoc.y + 1, cubeLoc.z); // OnTop ( I think)
+        //}
+        //else
+        //{
+        //    Debug.Log("SOMETHING weird: cubeAngle: " + panelYAxis + " panelAngle: " + panelYAxis + " <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        //}
+
         CubeLocationScript cubeScriptRight = LocationManager.GetLocationScript_CLIENT(rightVect);
         if (cubeScriptRight != null)
         {
             panelScript.cubeScriptRight = cubeScriptRight;
             panelScript.cubeRightVector = rightVect;
-            panelScript.rightPosNode = new Vector3(0, 4.5f, 0); // future issue here if want to move unit bit further on x,z axis on slope
+            cubeScriptRight._platform_Panel_Cube = cubeScript;
 
             SetHumanCubeRules(cubeScriptRight, true, true, true);
             SetAlienCubeRules(cubeScriptRight, true, true, true);
+            cubeScriptRight.IS_HUMAN_MOVABLE = true;
+            cubeScriptRight.IS_ALIEN_MOVABLE = true;
         }
 
-        Vector3 leftVect = new Vector3(cubeLoc.x, cubeLoc.y - 2, cubeLoc.z); // Underneath ( I think)
+        leftVect = new Vector3(cubeLoc.x, cubeLoc.y - 2, cubeLoc.z); // Underneath ( I think)
         CubeLocationScript cubeScriptLeft = LocationManager.GetLocationScript_CLIENT(leftVect);
 
         if (cubeScriptLeft != null)
         {
             panelScript.cubeScriptLeft = cubeScriptLeft;
             panelScript.cubeLeftVector = leftVect;
-            panelScript.leftPosNode = new Vector3(0, -4.5f, 0); // future issue here if want to move unit bit further on x,z axis on slope
+            cubeScriptLeft._platform_Panel_Cube = cubeScript;
 
             SetHumanCubeRules(cubeScriptLeft, true, true, true);
             SetAlienCubeRules(cubeScriptLeft, true, true, true);
+            cubeScriptLeft.IS_HUMAN_MOVABLE = true;
+            cubeScriptLeft.IS_ALIEN_MOVABLE = true;
         }
 
         if (cubeScriptLeft == null)
         {
             panelScript.cubeScriptLeft = panelScript.cubeScriptRight;
             panelScript.cubeLeftVector = panelScript.cubeRightVector;
-            panelScript.leftPosNode = panelScript.rightPosNode;
             //Debug.LogWarning("cubeScript == null so making neighbours same cube");
         }
         if (cubeScriptRight == null)
         {
             panelScript.cubeScriptRight = panelScript.cubeScriptLeft;
             panelScript.cubeRightVector = panelScript.cubeLeftVector;
-            panelScript.rightPosNode = panelScript.leftPosNode;
             //Debug.LogWarning("cubeScript == null so making neighbours same cube");
         }
     }
@@ -338,20 +337,24 @@ public class CubeConnections : MonoBehaviour
         {
             panelScript.cubeScriptRight = cubeScript;
             panelScript.cubeRightVector = cubeLoc;
-            panelScript.rightPosNode = new Vector3(0, 4.5f, 0); // future issue here if want to move unit bit further on x,z axis on slope
+            cubeScriptHalfBottom._platform_Panel_Cube = cubeScript;
 
             SetHumanCubeRules(cubeScript, true, true, true);
             SetAlienCubeRules(cubeScript, true, true, true);
+            cubeScriptHalfBottom.IS_HUMAN_MOVABLE = true;
+            cubeScriptHalfBottom.IS_ALIEN_MOVABLE = true;
         }
 
         if (cubeScriptHalfTop != null) // underneath
         {
             panelScript.cubeScriptLeft = cubeScript;
             panelScript.cubeLeftVector = cubeLoc;
-            panelScript.leftPosNode = new Vector3(0, -4.5f, 0); // future issue here if want to move unit bit further on x,z axis on slope
+            cubeScriptHalfTop._platform_Panel_Cube = cubeScript;
 
             SetHumanCubeRules(cubeScript, true, true, true);
             SetAlienCubeRules(cubeScript, true, true, true);
+            cubeScriptHalfTop.IS_HUMAN_MOVABLE = true;
+            cubeScriptHalfTop.IS_ALIEN_MOVABLE = true;
         }
     }
 }

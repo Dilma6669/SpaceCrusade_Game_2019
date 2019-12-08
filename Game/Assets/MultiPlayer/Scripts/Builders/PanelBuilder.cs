@@ -62,8 +62,7 @@ public class PanelBuilder : MonoBehaviour
         panelObject.transform.tag = name;
         panelScript.name = name;
 
-        panelScript.panelAngle = cubeData[4];
-        cubeScript.PanelChildAngle = cubeData[4];
+        panelScript._panelYAxis = cubeData[4];
 
     }
 

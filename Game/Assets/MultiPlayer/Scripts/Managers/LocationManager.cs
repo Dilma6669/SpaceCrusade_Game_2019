@@ -108,24 +108,24 @@ public class LocationManager : MonoBehaviour
 
         CubeLocationScript neighCubeScript = GetLocationScript_CLIENT(neighloc);
 
-        if (neighCubeScript == null)
-        {
-            //Debug.LogError("FAIL move cubeScript == null: " + neighloc);
-            return null;
-        }
-
         neighCubeScript.IS_HUMAN_MOVABLE = false;
         neighCubeScript.IS_ALIEN_MOVABLE = false;
 
+        if (neighCubeScript == null)
+        {
+            Debug.LogError("FAIL move cubeScript == null: " + neighloc);
+            return null;
+        }
+
         if (neighCubeScript.CubeIsSlope)
         {
-            //Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc);
+            Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc);
             return null;
         }
 
         if (neighCubeScript.CubeOccupied)
         {
-            //Debug.LogError("FAIL move Cube is Occupied at vect:" + neighloc);
+            Debug.LogError("FAIL move Cube is Occupied at vect:" + neighloc);
             return null;
         }
 
@@ -142,7 +142,7 @@ public class LocationManager : MonoBehaviour
                 CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
                 if (neighscript.CubeIsPanel)
                 {
-                   //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
+                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     return null;
                 }
                 // BOTTOM SLOPES //
@@ -151,7 +151,7 @@ public class LocationManager : MonoBehaviour
                 if (neighscript.CubeIsSlope)
                 {
                     //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    int slopeAngle = neighscript.PanelChildAngle;
+                    int slopeAngle = neighscript._panelScriptChild._panelYAxis;
                     if (slopeAngle == 90)
                     {
                         Vector3 neighBehindVect = node.NeighbourVects[3];
@@ -181,7 +181,7 @@ public class LocationManager : MonoBehaviour
                 CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
                 if (neighscript.CubeIsPanel)
                 {
-                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
+                    Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
                     return null;
                 }
                 // TOP SLOPES // THIS WILL NEED TO BE IMPLEMENTED AT SOME POINT FOR ALIENS
@@ -189,8 +189,8 @@ public class LocationManager : MonoBehaviour
                 neighscript = GetLocationScript_CLIENT(neighSlope);
                 if (neighscript.CubeIsSlope)
                 {
-                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    int slopeAngle = neighscript.PanelChildAngle;
+                    Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
+                    int slopeAngle = neighscript._panelScriptChild._panelYAxis;
                     if (slopeAngle == 90)
                     {
                         Vector3 neighBehindVect = node.NeighbourVects[3];
@@ -221,7 +221,7 @@ public class LocationManager : MonoBehaviour
         {
             if (recursiveCheck)
             {
-                //Debug.LogError("FAIL !neighCubeScript.CubePlatform: " + neighloc);
+                Debug.LogError("FAIL !neighCubeScript.CubePlatform: " + neighloc);
                 return null;
             }
 
@@ -251,8 +251,8 @@ public class LocationManager : MonoBehaviour
         {
             if (neighCubeScript.IsHumanWalkable == false && neighCubeScript.IsHumanClimbable == false && neighCubeScript.IsHumanJumpable == false)
             {
-                //Debug.LogError("FAIL move error Human walkable/climable/jumpable: " + neighloc);
-                //Debug.LogFormat("FAIL walkable/climable/jumpable: {0} , {1} , {2}", neighCubeScript.IsHumanWalkable, neighCubeScript.IsHumanClimbable, neighCubeScript.IsHumanJumpable);
+                Debug.LogError("FAIL move error Human walkable/climable/jumpable: " + neighloc);
+                Debug.LogFormat("FAIL walkable/climable/jumpable: {0} , {1} , {2}", neighCubeScript.IsHumanWalkable, neighCubeScript.IsHumanClimbable, neighCubeScript.IsHumanJumpable);
                 return null;
             }
             neighCubeScript.IS_HUMAN_MOVABLE = true;
@@ -261,7 +261,7 @@ public class LocationManager : MonoBehaviour
         {
             if (neighCubeScript.IsAlienWalkable == false && neighCubeScript.IsAlienClimbable == false && neighCubeScript.IsAlienJumpable == false)
             {
-               //Debug.LogError("FAIL move error ALIEN walkable/climable/jumpable: " + neighloc);
+               Debug.LogError("FAIL move error ALIEN walkable/climable/jumpable: " + neighloc);
                 return null;
             }
             neighCubeScript.IS_ALIEN_MOVABLE = true;
@@ -276,6 +276,9 @@ public class LocationManager : MonoBehaviour
 
     public static bool SetUnitOnCube_CLIENT(UnitScript unitScript, Vector3 loc)
     {
+
+        Debug.Log("SetUnitOnCube_CLIENT " + loc);
+
         Vector3 unitId = unitScript.UnitID;
         CubeLocationScript cubescript = CheckIfCanMoveToCube_CLIENT(unitScript.CubeUnitIsOn, loc, unitScript.UnitCanClimbWalls);
         if (cubescript != null)
@@ -292,7 +295,7 @@ public class LocationManager : MonoBehaviour
             }
             cubescript.CubeOccupied = true;
             unitScript.CubeUnitIsOn = cubescript;
-            //Debug.Log("SetUnitOnCube loc:  " + loc);
+            Debug.Log("SetUnitOnCube loc:  " + loc);
             return true;
         }
         else
@@ -342,9 +345,18 @@ public class LocationManager : MonoBehaviour
 
         if (onOff)
         {
-            _activeCube = GetLocationScript_CLIENT(location);
-            _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
-            UnitsManager.MakeActiveUnitMove_CLIENT(location); // this just checks is a unit is currently selected and then does the moving shit
+            if (GetLocationScript_CLIENT(location) != null)
+            {
+                _activeCube = GetLocationScript_CLIENT(location);
+                _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
+            }
+            else if (GetHalfLocationScript_CLIENT(location) != null)
+            {
+                _activeCube = GetHalfLocationScript_CLIENT(location);
+                _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
+            }
+
+           UnitsManager.MakeActiveUnitMove_CLIENT(location); // this just checks is a unit is currently selected and then does the moving shit
         }
     }
 

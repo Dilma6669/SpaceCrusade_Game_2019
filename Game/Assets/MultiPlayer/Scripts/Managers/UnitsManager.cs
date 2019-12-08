@@ -60,6 +60,8 @@ public class UnitsManager : MonoBehaviour
 
     public static void CreateUnitOnClient(NetworkNodeStruct networkNodeStruct, int playerID) // an attempt to make units like ships
     {
+        Debug.Log("CreateUnitOnClient " + networkNodeStruct.unitData.UnitStartingNodeID);
+
         CubeLocationScript cubeScript = LocationManager.GetLocationScript_CLIENT(networkNodeStruct.NodeID);
 
         if (cubeScript != null)
@@ -68,7 +70,8 @@ public class UnitsManager : MonoBehaviour
             GameObject unit = Instantiate(prefab, cubeScript.gameObject.transform, false);
             unit.transform.SetParent(cubeScript.gameObject.transform);
             unit.transform.localPosition = networkNodeStruct.CurrLoc;
-            unit.transform.localEulerAngles = networkNodeStruct.CurrRot;
+            GameObject unitContainer = unit.transform.FindDeepChild("UnitContainer").gameObject;
+            unitContainer.transform.localEulerAngles = networkNodeStruct.CurrRot;
 
             UnitScript unitScript = unit.GetComponent<UnitScript>();
 
@@ -191,7 +194,7 @@ public class UnitsManager : MonoBehaviour
 
             if (movePath != null)
             {
-                int unitID = (int)_activeUnit.netId.Value;
+                //int unitID = (int)_activeUnit.netId.Value;
                 MovementManager.CreatePathFindingNodes_CLIENT(_activeUnit, _activeUnit.UnitID, movePath);
 
                 //PlayerManager.NetworkAgent.CmdTellServerToMoveUnit(PlayerManager.PlayerAgent.NetworkInstanceID, _activeUnit.NetID, pathInts);

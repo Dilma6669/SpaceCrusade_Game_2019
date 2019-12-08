@@ -71,7 +71,6 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Image
     - UnityEngine.UI.Text
     com.unity.multiplayer-hlapi.Runtime.dll:
-    - UnityEngine.Networking.NetworkCallbacks
     - UnityEngine.Networking.NetworkIdentity
     - UnityEngine.Networking.NetworkManagerHUD
     - UnityEngine.Networking.NetworkTransform
@@ -494,7 +493,7 @@ ScriptsOnlyBuild:
     className: GridLayoutGroup
   - hash:
       serializedVersion: 2
-      Hash: 62e9fde4730fe70fd40c6e4cbbc25104
+      Hash: 1fcbd3686cdcd134d48461657ddd6709
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: MovementScript

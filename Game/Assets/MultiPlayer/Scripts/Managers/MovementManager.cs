@@ -7,6 +7,11 @@ public class MovementManager : MonoBehaviour
 
     private static MovementManager _instance;
 
+
+    public static bool _gravityActivated = false; // This will need to change per ship section and not just a general global, cause units are already accessing it// fuck thats gunna be a shit show later on
+    public static bool _gravityBoots_ON = true; // This will need to change per player, for now its a shitty global
+
+
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 

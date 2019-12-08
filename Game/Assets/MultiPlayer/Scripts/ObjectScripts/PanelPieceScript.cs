@@ -10,7 +10,7 @@ public class PanelPieceScript : MonoBehaviour {
 	public bool _panelActive = false;
 	public bool transFlag = false;
 
-	public int panelAngle = 0;
+	public int _panelYAxis = 0;
 
 	public Vector3 cubeLeftVector;
 	public Vector3 cubeRightVector;
@@ -22,11 +22,6 @@ public class PanelPieceScript : MonoBehaviour {
     private CubeLocationScript activeCubeScript = null;
 
 	public bool _isLadder = false;
-
-    public Vector3 leftPosNode = new Vector3();
-	public Vector3 rightPosNode = new Vector3();
-
-	//public Vector3 posActive;
 
 	public bool cubeVisible = true;
 
@@ -96,14 +91,12 @@ public class PanelPieceScript : MonoBehaviour {
                         triIndex == 8 || triIndex == 9)
                 {
                     activeCubeScript = cubeScriptRight;
-                    //posActive = transform.TransformPoint(rightPosNode);
                 }
                 else if (triIndex == 2 || triIndex == 3 || // (if floor) To sit Underneath of panels
                         triIndex == 6 || triIndex == 7 ||
                         triIndex == 10 || triIndex == 11)
                 {
                     activeCubeScript = cubeScriptLeft;
-                    //posActive = transform.TransformPoint(leftPosNode);
                 }
                 else
                 {

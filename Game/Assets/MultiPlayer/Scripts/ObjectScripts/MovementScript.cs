@@ -5,21 +5,23 @@ public class MovementScript : MonoBehaviour
 {
     ////////////////////////////////////////////////
 
+    public UnitScript unitScript;
+
     private bool moveInProgress = false;
 
     private Vector3 _unitCurrPos;
 
     private List<Vector3> _nodes;
 
-
-    private Vector3 _finalTargetStaticLoc;              // final target
     private Vector3 _currTargetCubeID;                 // current target ID
-    private CubeLocationScript _currTargetScript;      // current target script
-    public Vector3 _currTargetDynamicLoc;               // vector of the moving cube Object
 
-    public GameObject _worldNodeObject;
-    public Vector3 _worldNodeDynamicLoc;                // When the node is moving
-    public Vector3 _worldNodeStaticLoc;                 // original position as in when world first loads
+    private CubeLocationScript _currTargetScript;      // current target script
+    public Vector3 _currTargetLoc;                     // vector of the moving cube Object
+    private PanelPieceScript _currTargetPanelScript;
+
+    public Vector3 _finalTargetLoc;                     // vector of the moving cube Object
+    private CubeLocationScript _finalTargetScript;      // final target script
+
 
     private int locCount;
 
@@ -30,6 +32,7 @@ public class MovementScript : MonoBehaviour
 
     private Animator[] _animators;
 
+    private Transform unitContainerAngles; // for rotations
     private Transform unitContainerTransform; // for rotations
 
     ////////////////////////////////////////////////
@@ -37,19 +40,22 @@ public class MovementScript : MonoBehaviour
 
     void Awake()
     {
-        unitContainerTransform = transform.Find("UnitContainer");
+        unitContainerAngles = transform.FindDeepChild("UnitAngleContainer");
+        unitContainerTransform = transform.FindDeepChild("UnitContainer");
         _animators = GetComponentsInChildren<Animator>();
     }
 
     void Start()
     {
+        unitScript = GetComponent<UnitScript>();
+
         _nodes = new List<Vector3>();
         _newPathNodes = new List<Vector3>();
     }
 
 
     // Use this for initialization
-    void Update()
+    void FixedUpdate()
     {
 
         if (moveInProgress)
@@ -61,20 +67,15 @@ public class MovementScript : MonoBehaviour
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    private Vector3 GetWorldNodeMovementVect()
-    {
-        return _worldNodeObject.transform.position - _worldNodeStaticLoc;
-    }
-
     private void StartMoving()
     {
         if (locCount < _nodes.Count)
         {
             _unitCurrPos = unitContainerTransform.position;
 
-            _currTargetDynamicLoc = _currTargetScript.transform.position;
+            _currTargetLoc = _currTargetScript.transform.position;
 
-            if (_unitCurrPos != _currTargetDynamicLoc)
+            if (_unitCurrPos != _currTargetLoc)
             {
                 UnitMoveTowardsTarget();
             }
@@ -89,27 +90,60 @@ public class MovementScript : MonoBehaviour
 
     private void UnitMoveTowardsTarget()
     {
-        // Rotation
-        Vector3 targetDir = Vector3.zero;
-        Vector3 newDir = Vector3.zero;
-        //if (_staticTargetVect == Vector3.zero)
-        //{
-            targetDir = _currTargetDynamicLoc - _unitCurrPos; // for units (rotates almost straight away)
-            newDir = Vector3.RotateTowards(unitContainerTransform.forward, targetDir, (Time.deltaTime * 2f) * _unitsSpeed, 0.0f);
-        //}
-        unitContainerTransform.rotation = Quaternion.LookRotation(newDir);
-
         // Moving
-        transform.position = Vector3.MoveTowards(_unitCurrPos, _currTargetDynamicLoc, Time.deltaTime * _unitsSpeed);
+        transform.position = Vector3.MoveTowards(transform.position, _currTargetLoc, Time.deltaTime * _unitsSpeed);
+
+        // Rotation
+        unitContainerTransform.LookAt(_currTargetLoc, Vector3.up);
+        unitContainerTransform.localEulerAngles = new Vector3(0, unitContainerTransform.localEulerAngles.y, 0);
+
+        if (MovementManager._gravityActivated == false)
+        {
+            switch (_currTargetPanelScript.name)
+            {
+                case "Panel_Floor":
+                    unitContainerAngles.localEulerAngles = new Vector3(0, unitContainerAngles.localEulerAngles.y, 0);
+                    break;
+                case "Panel_Wall":
+                    //itContainerTransform.localEulerAngles = new Vector3(0, 0, unitContainerTransform.localEulerAngles.z);
+                    break;
+                case "Panel_Angle": // angles put in half points
+                    int panelYaxis = _currTargetPanelScript._panelYAxis;
+
+                    if (panelYaxis == 0)
+                    {
+                        unitContainerAngles.localEulerAngles = new Vector3(45, 0, 0);
+                    }
+                    else if (panelYaxis == 90)
+                    {
+                        unitContainerAngles.localEulerAngles = new Vector3(0, 0, -45);
+                    }
+                    else if (panelYaxis == 180)
+                    {
+                        unitContainerAngles.localEulerAngles = new Vector3(-45, 0, 0);
+                    }
+                    else if (panelYaxis == 270)
+                    {
+                        unitContainerAngles.localEulerAngles = new Vector3(0, 0, 45);
+                    }
+                    break;
+                default:
+                    Debug.LogError("FUCK got error here " + _currTargetPanelScript.name);
+                    break;
+            }
+        }
     }
 
     ////////////////////////////////////////////////
 
     private void UnitReachedTarget()
     {
+        //Debug.Log("UnitReachedTarget!");
+
         locCount += 1;
 
-        //Debug.Log("UnitReachedTarget!");
+        transform.SetParent(_currTargetScript.transform);
+        transform.localPosition = Vector3.zero;
 
         if (_newPathSet) // has a new location been clicked
         {
@@ -132,8 +166,6 @@ public class MovementScript : MonoBehaviour
         Reset();
         _nodes = _newPathNodes;
 
-        _finalTargetStaticLoc = _nodes[_nodes.Count - 1];
-
         SetNextTarget();
     }
 
@@ -154,13 +186,14 @@ public class MovementScript : MonoBehaviour
     {
         _currTargetCubeID = _nodes[locCount];
         _currTargetScript = LocationManager.GetLocationScript_CLIENT(_currTargetCubeID);
-       
+        _currTargetPanelScript = _currTargetScript._platform_Panel_Cube._panelScriptChild;
+
         if (!LocationManager.SetUnitOnCube_CLIENT(GetComponent<UnitScript>(), _currTargetCubeID))
         {
-            //Debug.LogWarning("units movement interrupted >> recalculating");
+            Debug.LogWarning("units movement interrupted >> recalculating");
             moveInProgress = false;
             Reset();
-            //NetWorkManager.NetworkAgent.ServerTellClientToFindNewPathForUnit(PlayerManager.PlayerAgent.NetID, _finalTargetStaticLoc);
+            UnitsManager.MakeActiveUnitMove_CLIENT(_finalTargetLoc);
         }
     }
 
@@ -172,13 +205,11 @@ public class MovementScript : MonoBehaviour
 
         _unitsSpeed = gameObject.transform.GetComponent<UnitScript>().UnitCombatStats[1]; // movement
 
+        _finalTargetLoc = path[path.Count-1];
+        _finalTargetScript = LocationManager.GetLocationScript_CLIENT(_finalTargetLoc);
+
         if (path.Count > 0)
         {
-            _finalTargetStaticLoc = path[path.Count - 1];
-
-            Vector3 nodeVect = gameObject.GetComponent<UnitScript>().CubeUnitIsOn.GetComponent<CubeLocationScript>().CubeID;
-            _worldNodeStaticLoc = nodeVect;
-
             if (moveInProgress)
             {
                 _newPathNodes = path;

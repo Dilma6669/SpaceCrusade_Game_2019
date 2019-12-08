@@ -20,13 +20,13 @@ public class PathFindingNode : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        UnitScript unitScript = other.GetComponent<UnitScript>();
+        UnitScript unitScript = other.transform.parent.GetComponent<UnitScript>();
         if (unitScript != null)
         {
-            Vector3 unitID = other.GetComponent<UnitScript>().UnitID;
+            Vector3 unitID = other.gameObject.transform.parent.GetComponent<UnitScript>().UnitID;
             if (unitID == UnitControllerID)
             {
-                unitScript.SetUnitToNextLocation_CLIENT();
+                unitScript.SetUnitToNextLocation_CLIENT(CubeParentLoc);
                 DestroyNode();
             }
         }

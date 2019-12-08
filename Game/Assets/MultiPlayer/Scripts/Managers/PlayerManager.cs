@@ -191,7 +191,7 @@ public class PlayerManager : MonoBehaviour
         switch (playerID)
         {
             case 0:
-                return new Vector3(600, 700, 0);
+                return new Vector3(600, 1000, 0);
             case 1:
                 return new Vector3(-600, 700, 0);
             case 2:
