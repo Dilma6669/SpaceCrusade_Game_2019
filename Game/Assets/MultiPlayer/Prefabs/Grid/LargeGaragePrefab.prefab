@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4634455094964960}
   - component: {fileID: 65687866413149758}
   - component: {fileID: 114720580752990544}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: LargeGaragePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,7 +77,7 @@ GameObject:
   - component: {fileID: 4459690877140108}
   - component: {fileID: 33405359314219118}
   - component: {fileID: 23887609454970586}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: wall_04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -155,7 +155,7 @@ GameObject:
   - component: {fileID: 4697974407070994}
   - component: {fileID: 33362165595595632}
   - component: {fileID: 23416867229853136}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: ColourShield
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -233,7 +233,7 @@ GameObject:
   - component: {fileID: 4036277037571238}
   - component: {fileID: 33342043741047990}
   - component: {fileID: 23174331896280028}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: wall_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -311,7 +311,7 @@ GameObject:
   - component: {fileID: 4281378670661816}
   - component: {fileID: 33860826869444690}
   - component: {fileID: 23768193053478806}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -388,7 +388,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4135787194721206}
   - component: {fileID: 212035711116189730}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -468,7 +468,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4378882744283908}
   - component: {fileID: 212264949955358316}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -547,7 +547,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4331628079408894}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Select
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -585,7 +585,7 @@ GameObject:
   - component: {fileID: 4775269098816628}
   - component: {fileID: 33167014164267588}
   - component: {fileID: 23398190428795606}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: wall_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -663,7 +663,7 @@ GameObject:
   - component: {fileID: 4321768146382328}
   - component: {fileID: 33941194969754608}
   - component: {fileID: 23623811659426994}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: wall_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -740,7 +740,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4424687485751410}
   - component: {fileID: 212389034826064630}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -821,7 +821,7 @@ GameObject:
   - component: {fileID: 4601195731399232}
   - component: {fileID: 33328609234046872}
   - component: {fileID: 23703482157390222}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Roof
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -898,7 +898,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4496201477096206}
   - component: {fileID: 212849167791633784}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -978,7 +978,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4677800729800428}
   - component: {fileID: 212400278705098094}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1058,7 +1058,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4704284201756724}
   - component: {fileID: 212650610806973128}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

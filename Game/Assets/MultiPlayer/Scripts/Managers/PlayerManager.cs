@@ -89,12 +89,7 @@ public class PlayerManager : MonoBehaviour
         get { return _playerData.allUnitData; }
     }
 
-    public static Vector3 PlayerShipSize
-    {
-        get { return _playerData.shipSize; }
-    }
-
-    public static List<MapPieceStruct> PlayerShipMapPieces
+    public static Dictionary<int, int[]> PlayerShipMapPieces
     {
         get { return _playerData.shipMapPieces; }
     }
@@ -186,21 +181,21 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    public static Vector3 GetTESTShipMovementPositions(int playerID)
+    public static Vector3Int GetTESTShipMovementPositions(int playerID)
     {
         switch (playerID)
         {
             case 0:
-                return new Vector3(600, 1000, 0);
+                return new Vector3Int(600, 1000, 0);
             case 1:
-                return new Vector3(-600, 700, 0);
+                return new Vector3Int(-600, 700, 0);
             case 2:
-                return new Vector3(0, 700, 600);
+                return new Vector3Int(0, 700, 600);
             case 3:
-                return new Vector3(0, 700, -600);
+                return new Vector3Int(0, 700, -600);
             default:
                 Debug.Log("SOMETHING WENT WRONG HERE: playerID: " + playerID);
-                return Vector3.zero;
+                return Vector3Int.zero;
         }
     }
 

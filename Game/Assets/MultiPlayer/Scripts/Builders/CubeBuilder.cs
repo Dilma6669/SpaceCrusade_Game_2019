@@ -24,37 +24,43 @@ public class CubeBuilder : MonoBehaviour {
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    public static CubeLocationScript CreateCubeObject(Vector3 gridLoc, int[] cubeData, int rotations, int nodeLayerCount, Transform parent)
+    public static CubeLocationScript CreateCubeObject(Vector3Int localGridLoc, int[] cubeData, Transform parent)
     {
-        GameObject cubeObject = WorldBuilder._nodeBuilder.CreateDefaultCube(gridLoc, rotations, nodeLayerCount, parent);
+        GameObject cubeObject = WorldBuilder._nodeBuilder.CreateDefaultCube(localGridLoc, parent);
         CubeLocationScript cubeScript = cubeObject.GetComponent<CubeLocationScript>();
-        //cubeScript.CubeAngle = cubeType;
 
-        if (cubeData[2] != 00)
+        if (cubeData[0] != (int)CubeObjectTypes.Empty)
         {
-            PanelBuilder.CreatePanelForCube(cubeData, cubeScript, 0, rotations);
+            // Panels
+            if (cubeData[0] == (int)CubeObjectTypes.Panel_Floor || 
+                cubeData[0] == (int)CubeObjectTypes.Panel_Wall || 
+                cubeData[0] == (int)CubeObjectTypes.Panel_Angle)
+                PanelBuilder.CreatePanelForCube(cubeData, cubeScript);
+
+            // Other Objects
+
         }
       
-        SortOutCubeScriptShit(gridLoc, cubeScript);
+        SortOutCubeScriptShit(cubeScript);
 
         return cubeScript;
     }
 
 
-    private static void SortOutCubeScriptShit(Vector3 GridLoc, CubeLocationScript cubeScript)
+    private static void SortOutCubeScriptShit(CubeLocationScript cubeScript)
     {
         // If cube is movable or not
         if (cubeScript.CubeMoveable)
         {
-          LocationManager.SetCubeScriptToLocation_CLIENT(GridLoc, cubeScript);
+          LocationManager.SetCubeScriptToLocation_CLIENT(cubeScript.CubeID, cubeScript);
         }
         else
         {
-            LocationManager.SetCubeScriptToHalfLocation_CLIENT(GridLoc, cubeScript);
+            LocationManager.SetCubeScriptToHalfLocation_CLIENT(cubeScript.CubeID, cubeScript);
         }
 
         // for layering system
-        LayerManager.AddCubeToLayer(cubeScript);
+        //LayerManager.AddCubeToLayer(cubeScript);
     }
 
     ////////////////////////////////////////////////

@@ -6,6 +6,8 @@ public class PanelBuilder : MonoBehaviour
 
     private static PanelBuilder _instance;
 
+    private ObjectBuilder objectbuilder;
+
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
@@ -19,51 +21,71 @@ public class PanelBuilder : MonoBehaviour
         {
             _instance = this;
         }
+
+        objectbuilder = FindObjectOfType<ObjectBuilder>();
     }
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    public static void CreatePanelForCube(int[] cubeData, CubeLocationScript cubeScript, int angle, int rotations)
+    public static void CreatePanelForCube(int[] cubeData, CubeLocationScript cubeScript)
     {
+        GameObject panelObject = WorldBuilder._nodeBuilder.CreatePanelObject(cubeScript);
 
-        Transform cubeTrans = cubeScript.GetComponent<Transform>();
-        GameObject panelObject = WorldBuilder._nodeBuilder.CreatePanelObject(cubeTrans);
+        panelObject.GetComponent<ObjectScript>().objectStyle = (CubeObjectStyles)cubeData[1];
+
+        if (panelObject.GetComponent<Renderer>())
+        {
+            ObjectTextures texEnum = (ObjectTextures)cubeData[2];
+            string matName = "MapTextures/Materials/" + texEnum.ToString();
+            Material mat = (Material)Resources.Load(matName, typeof(Material));
+            panelObject.GetComponent<Renderer>().material = mat;
+        }
+
+
         PanelPieceScript panelScript = panelObject.GetComponent<PanelPieceScript>();
 
-        int rotX = cubeData[3];
-        int rotY = cubeData[4];
-        int rotZ = cubeData[5];
+        int rotX = cubeData[4];
+        int rotY = cubeData[5];
+        int rotZ = cubeData[6];
 
-        panelObject.transform.localPosition = new Vector3(0, 0, 0);
-        panelObject.transform.localEulerAngles = new Vector3(rotX, rotY, rotZ);
+        panelObject.GetComponent<ObjectScript>().forcedRotation = new Vector3Int(rotX, rotY, rotZ);
 
-        string name = "";
+        panelObject.transform.localScale *= 200;
 
-        if ((rotX == 90 || rotX == 270) && rotY == 0) // Floor
+        if (cubeData[0] == (int)CubeObjectTypes.Panel_Floor) // Floor
         {
+            panelObject.GetComponent<ObjectScript>().objectType = CubeObjectTypes.Panel_Floor;
             cubeScript.CubeIsSlope = false;
-            //panelObject.transform.localScale = new Vector3(1, 1, 1);
-            name = "Panel_Floor";
+            panelScript._panelYAxis = 0;
         }
-        else if (rotX == 0 && rotZ == 0) // Wall
+        else if (cubeData[0] == (int)CubeObjectTypes.Panel_Wall) // Floor
         {
+            panelObject.GetComponent<ObjectScript>().objectType = CubeObjectTypes.Panel_Wall;
             cubeScript.CubeIsSlope = false;
-            //panelObject.transform.localScale = new Vector3(1, 1, 1);
-            name = "Panel_Wall";
+
+            rotZ = 90;
+
+            panelScript._panelYAxis = rotY;
+
+        }
+        else if (cubeData[0] == (int)CubeObjectTypes.Panel_Angle) // Floor
+        {
+            panelObject.GetComponent<ObjectScript>().objectType = CubeObjectTypes.Panel_Angle;
+            cubeScript.CubeIsSlope = true;
         }
         else
         {
-            cubeScript.CubeIsSlope = true;
-            panelObject.transform.localScale = new Vector3(20, 30, 1);
-            name = "Panel_Angle";
+            Debug.LogError("GOT AN ISSUE HERE");
         }
 
-        panelObject.transform.tag = name;
-        panelScript.name = name;
+        //Debug.Log("fuck TEST >>>>>>>>>> rotX " + rotX + " + rotY " + rotY + " + rotZ " + rotZ);
 
-        panelScript._panelYAxis = cubeData[4];
+        panelObject.transform.localRotation = Quaternion.Euler(new Vector3Int(rotX, rotY, rotZ));
 
+
+       // panelObject.transform.tag = panelName;
+       // panelScript.name = panelName;
     }
 
 }

@@ -25,266 +25,83 @@ public class MapNodeBuilder : MonoBehaviour
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    // Get Map Vects ////////////////////////////////////////////////////////////
-    private static List<Vector3> GetMapVects(WorldNode nodeScript, bool customShip, Vector3 customSize)
+    public static void CreateMapNodesForWorldNode(WorldNode worldNode)
     {
-        Vector3 worldNodeloc = nodeScript.NodeLocation;
+        int maxNodeSizeX = 9;
+        int maxNodeSizeY = 9;
+        int maxNodeSizeZ = 9;
 
-        List<Vector3> nodeVects = new List<Vector3>();
+        int nodeDistanceX = MapSettings.MapNodeCountDistanceXZ;
+        int nodeDistanceY = MapSettings.MapNodeCountDistanceY;
+        int nodeDistanceZ = MapSettings.MapNodeCountDistanceXZ;
 
-        int sizeX;
-        int sizeZ;
-        int sizeY;
+        int vectStartLocX = -(nodeDistanceX * 4);
+        int vectStartLocY = -(nodeDistanceY * 4);
+        int vectStartLocZ = -(nodeDistanceZ * 4);
 
-        int multiplierX;
-        int multiplierZ;
-        int multiplierY;
+        int vectLocX = vectStartLocX;
+        int vectLocY = vectStartLocY;
+        int vectLocZ = vectStartLocZ;
 
-        int countX;
-        int countZ;
-        int countY;
+        Dictionary<int, int[]> mapPieces = worldNode.NodeData.worldNodeMapPieces;
 
-        if (!customShip)
+        List<MapNode> mapNodes = new List<MapNode>();
+
+        int locCounter = 1; // coz locations start at 1
+        for (int y = 0; y < maxNodeSizeY; y++)
         {
-            sizeX = nodeScript.NodeSize;
-            sizeZ = nodeScript.NodeSize;
-            sizeY = nodeScript.NodeSize;
-        }
-        else
-        {
-            sizeX = (int)customSize.x;
-            sizeZ = (int)customSize.z;
-            sizeY = (int)customSize.y;
-        }
-
-        int mapOffset = -1;// this is for the maps overlapping each other with thenew system (might be fucking my self over here)
-
-        multiplierX = (int)Mathf.Floor(sizeX / 2) * (MapSettings.sizeOfMapPiecesXZ + mapOffset);
-        multiplierZ = (int)Mathf.Floor(sizeZ / 2) * (MapSettings.sizeOfMapPiecesXZ + mapOffset);
-        multiplierY = (int)Mathf.Floor(sizeY / 2) * (MapSettings.sizeOfMapPiecesY + mapOffset);
-
-        countX = (int)worldNodeloc.x - multiplierX;
-        countZ = (int)worldNodeloc.z - multiplierZ;
-        countY = (int)worldNodeloc.y - multiplierY;
-
-        for (int y = 0; y < sizeY; y++)
-        {
-            for (int z = 0; z < sizeZ; z++)
+            for (int z = 0; z < maxNodeSizeZ; z++)
             {
-                for (int x = 0; x < sizeX; x++) 
+                for (int x = 0; x < maxNodeSizeX; x++)
                 {
-                    // Debug.Log("Vector3 (gridLoc): x: " + x + " y: " + y + " z: " + z);
-                    nodeVects.Add(new Vector3(countX, countY, countZ));
-                    countX += (MapSettings.sizeOfMapPiecesXZ + mapOffset);
-                }
-                countX = (int)worldNodeloc.x - multiplierX;
-                countZ += (MapSettings.sizeOfMapPiecesXZ + mapOffset);
-            }
-            countX = (int)worldNodeloc.x - multiplierX;
-            countZ = (int)worldNodeloc.z - multiplierZ;
-            countY += (MapSettings.sizeOfMapPiecesY + mapOffset);
-        }
-
-        return nodeVects;
-    }
-    ////////////////////////////////////////////////////////////////////////////
-
-
-    // Create Map Nodes ////////////////////////////////////////////////////////
-    public static Dictionary<WorldNode, List<MapNode>> CreateMapNodes(List<WorldNode> worldNodes, bool customShip, Vector3 shipSize, List<MapPieceStruct> customShipMapPieces = null)
-    {
-        // Wrap map Nodes around around Initial
-        Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes = new Dictionary<WorldNode, List<MapNode>>();
-
-        foreach (WorldNode worldNode in worldNodes)
-        {
-            List<Vector3> mapVects = (customShip == false) ? GetMapVects(worldNode, false, Vector3.zero) : GetMapVects(worldNode, true, shipSize);
-
-            List<MapNode> mapNodes = new List<MapNode>();
-
-            int mapCount = 1;
-            int layerCount = 0;
-            int nodeLayerCount = -1;
-
-            foreach (Vector3 location in mapVects)
-            {
-                MapPieceStruct mapData = new MapPieceStruct();
-
-                if (customShip == false)
-                {
-                    MapPieceTypes randomMapPiece = MapPieceTypes.MapPiece_Corridor_01;
-
-                    int random = Random.Range(0, 3);
-                    if (random == 0)
+                    if (mapPieces.ContainsKey(locCounter))
                     {
-                        randomMapPiece = MapPieceTypes.MapPiece_Corridor_01;
-                    }
-                    if (random == 1)
-                    {
-                        randomMapPiece = MapPieceTypes.MapPiece_Corridor_02;
-                    }
-                    if (random == 2)
-                    {
-                        randomMapPiece = MapPieceTypes.MapPiece_Corridor_03;
-                    }
-
-                    mapData = new MapPieceStruct()
-                    {
-                        nodeType = NodeTypes.MapNode,
-                        mapPiece = randomMapPiece,
-                        location = location,
-                        rotation = Vector3.zero,
-                        direction = 0,
-                        parentNode = worldNode.gameObject.transform
-                    };
-                }
-                else
-                {
-                    MapPieceStruct customMapData = customShipMapPieces[mapCount - 1];
-
-                    mapData = new MapPieceStruct()
-                    {
-                        nodeType = customMapData.nodeType,
-                        mapPiece = customMapData.mapPiece,
-                        location = location,
-                        rotation = Vector3.zero,
-                        direction = 0,
-                        parentNode = worldNode.gameObject.transform
-                    };
-                }
-
-
-                MapNode mapNode = WorldBuilder._nodeBuilder.CreateNode<MapNode>(mapData);
-                mapNode.NodeSize = 1;
-                mapNode.worldNodeParent = worldNode;
-                mapNodes.Add(mapNode);
-
-                ///////////
-                // NOT TO FUTURE SELF THIS SECTION IS NOT WORKING BECAUSE THERE IS NO LONGER A CENTRAL NODE LAYER COUNT SYSTEM BECAUSE OF CUSTOM SHIPS ALL RUNNNIG THROUGH HERE
-                if (worldNode.NodeSize == 1)
-                {
-                    nodeLayerCount = worldNode.NodeLayerCount + 4; // 4 total layers in 1 map and vent piece
-                }
-                else if (worldNode.NodeSize == 3)
-                {
-                    nodeLayerCount = worldNode.NodeLayerCount + layerCount;
-
-                    if (mapCount % 9 == 0)
-                    {
-                        layerCount = layerCount + 4;  // 4 total layers in 1 map and vent piece
-                    }
-                }
-                else
-                {
-                    Debug.LogError("something weird here because a custom ship isnt defined by NodeSize");
-                }
-                mapNode.NodeLayerCount = nodeLayerCount;
-
-                LayerManager.AddNodeToLayer(mapNode); // for camera layers // THIS IS GOING TO BE ALLLLL FUCKED WITH SHIPS MAP PIECES
-                ////////////////////
-                ///////////
-
-
-                if (!worldNode.entrance)
-                {
-                    WorldBuilder._nodeBuilder.AttachCoverToNode(mapNode, mapNode.gameObject, CoverTypes.NormalCover, new Vector3(0, 0, 0));
-                }
-
-
-                mapNode.neighbours = new int[6];
-                for (int i = 0; i < mapNode.neighbours.Length; i++)
-                {
-                    mapNode.neighbours[i] = 1;
-                }
-
-
-                mapCount++;
-            }
-            worldNode.mapNodes = mapNodes;
-            worldNodeAndWrapperNodes.Add(worldNode, mapNodes);
-
-            ////////////////
-
-
-            if (customShip == false)
-            {
-                //// Map Neighbours
-
-                int[] worldNodeNeighbours = worldNode.neighbours;
-                if (worldNode.NodeSize == 1)
-                {
-                    MapNode mapNode = worldNode.mapNodes[0];
-                    int[] mapNeighbours = mapNode.neighbours;
-
-                    for (int i = 0; i < worldNodeNeighbours.Length; i++)
-                    {
-                        if (worldNodeNeighbours[i] != -1)
+                        MapNodeStruct mapData = new MapNodeStruct()
                         {
-                            mapNeighbours[i] = 1;
-                        }
-                        else
+                            NodeID = new Vector3Int(vectLocX, vectLocY, vectLocZ),
+                            mapPiece = (MapPieceTypes)mapPieces[locCounter][0],
+                            location = new Vector3Int(vectLocX, vectLocY, vectLocZ),
+                            rotation = new Vector3Int(0, mapPieces[locCounter][1], 0),
+                            parentNode = worldNode.gameObject.transform,
+                            spinny = mapPieces[locCounter][2]
+                        };
+
+                        MapNode mapNode = WorldBuilder._nodeBuilder.CreateMapNode(mapData);
+                        mapNode.worldNodeParent = worldNode;
+                        mapNodes.Add(mapNode);
+
+                        if (!worldNode.entrance) // this could be better
                         {
-                            mapNeighbours[i] = -1;
-                            //mapNode.entranceSides.Add(i);
+                            CoverTypes coverType = CoverTypes.NormalCover;
+
+                            if (mapNode.NodeMapPiece == MapPieceTypes.ConnectorPiece_Hor_Empty)
+                            {
+                                coverType = CoverTypes.ConnectorCover;
+                            }
+                            else if (mapNode.NodeMapPiece == MapPieceTypes.ConnectorPiece_Ver_Empty)
+                            {
+                                coverType = CoverTypes.ConnectorUPCover;
+                            }
+
+                            WorldBuilder._nodeBuilder.AttachCoverToNode(mapNode, mapNode.gameObject, coverType);
+
                         }
                     }
+
+                    locCounter++;
+
+                    vectLocX += nodeDistanceX;
                 }
-                ////////
-                if (worldNode.NodeSize == 3)
-                {
-                    // bottom
-                    SetMapNeighboursWithMultipleLinks(worldNode, 0, 4, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 });
-                    // Front
-                    SetMapNeighboursWithMultipleLinks(worldNode, 1, 10, new int[] { 0, 1, 2, 9, 10, 11, 18, 19, 20 });
-                    // Left
-                    SetMapNeighboursWithMultipleLinks(worldNode, 2, 12, new int[] { 0, 3, 6, 9, 12, 15, 18, 21, 24 });
-                    // Right
-                    SetMapNeighboursWithMultipleLinks(worldNode, 3, 14, new int[] { 2, 5, 8, 11, 14, 17, 20, 23, 26 });
-                    // Back
-                    SetMapNeighboursWithMultipleLinks(worldNode, 4, 16, new int[] { 6, 7, 8, 15, 16, 17, 24, 25, 26 });
-                    // Top
-                    SetMapNeighboursWithMultipleLinks(worldNode, 5, 22, new int[] { 18, 19, 20, 21, 22, 23, 24, 25, 26 });
-                }
+                vectLocX = vectStartLocX;
+
+                vectLocZ += nodeDistanceZ;
             }
+            vectLocX = vectStartLocX;
+            vectLocZ = vectStartLocZ;
+
+            vectLocY += nodeDistanceY;
         }
 
-        return worldNodeAndWrapperNodes;
+        worldNode.mapNodes = mapNodes;
     }
-    ////////////////////////////////////////////////////////////////////////////
-
-    // SetUp MapNode Connections to neighbours ////////////////////////////////////////////////////////
-    private static void SetMapNeighboursWithMultipleLinks(WorldNode worldNode, int worldNeighCount, int singleLinkCount, int[] multipleLinkCounts)
-    {
-        int[] worldNodeNeighbours = worldNode.neighbours;
-
-        if (worldNodeNeighbours[worldNeighCount] != -1)
-        {
-            WorldNode worldNeighbour = WorldNodeBuilder.GetWorldNode(worldNodeNeighbours[worldNeighCount]);
-
-            if (worldNeighbour.NodeSize == 1)
-            {
-                foreach (int link in multipleLinkCounts)
-                {
-                    worldNode.mapNodes[link].neighbours[worldNeighCount] = -1;
-                }
-                worldNode.mapNodes[singleLinkCount].neighbours[worldNeighCount] = 1; // for the middle front connector
-            }
-            if (worldNeighbour.NodeSize == 3)
-            {
-                foreach (int link in multipleLinkCounts)
-                {
-                    worldNode.mapNodes[link].neighbours[worldNeighCount] = 1;
-                }
-            }
-        }
-        else
-        {
-            foreach (int link in multipleLinkCounts)
-            {
-                worldNode.mapNodes[link].neighbours[worldNeighCount] = -1;
-                //worldNode.mapNodes[link].entranceSides.Add(worldNeighCount);
-            }
-        }
-    }
-    ////////////////////////////////////////////////////////////////////////////
 }

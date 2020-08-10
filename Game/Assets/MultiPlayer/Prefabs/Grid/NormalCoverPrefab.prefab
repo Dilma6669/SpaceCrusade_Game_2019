@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4847966251673724}
   - component: {fileID: 212452761102130712}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -90,7 +90,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4927411178461760}
   - component: {fileID: 212009928939497050}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -169,7 +169,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4954295696855488}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Select
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -206,7 +206,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4064118375922196}
   - component: {fileID: 212765269733497216}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -289,7 +289,7 @@ GameObject:
   - component: {fileID: 23322558660868542}
   - component: {fileID: 65399913762956566}
   - component: {fileID: 114083251221138716}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: NormalCoverPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -303,9 +303,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1474394807116960}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 26, y: 8, z: 26}
+  m_LocalScale: {x: 1.5, y: 0.7, z: 1.5}
   m_Children:
   - {fileID: 4954295696855488}
   m_Father: {fileID: 0}
@@ -393,7 +393,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4123425317830004}
   - component: {fileID: 212766542294898406}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -473,7 +473,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4677546482693602}
   - component: {fileID: 212710533636635684}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -553,7 +553,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4061359388085558}
   - component: {fileID: 212924912910515590}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: panel_green
   m_TagString: Untagged
   m_Icon: {fileID: 0}

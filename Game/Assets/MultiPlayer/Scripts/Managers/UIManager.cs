@@ -1,5 +1,7 @@
 ﻿using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class UIManager : MonoBehaviour
 {
@@ -9,15 +11,12 @@ public class UIManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
+    static Camera mainCamera;
+
     static Text playerIDText;
     static Text playerNameText;
     static Text totalPlayerText;
     static Text seedNumText;
-
-    ////////////////////////////////////////////////
-
-    public delegate void ChangeLayerEvent(int change);
-	public static event ChangeLayerEvent OnChangeLayerClick;
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
@@ -39,6 +38,15 @@ public class UIManager : MonoBehaviour
         seedNumText = transform.FindDeepChild("SeedNum").GetComponent<Text>();
     }
 
+    private void Start()
+    {
+    }
+
+    private void Update()
+    {
+        //GatherMouseHoverObjects();
+    }
+
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
@@ -54,6 +62,8 @@ public class UIManager : MonoBehaviour
         if (_syncedVars == null) { Debug.LogError("We got a problem here"); }
 
         seedNumText.text = _syncedVars.GlobalSeed.ToString();
+
+        mainCamera = PlayerManager.CameraAgent.MainCamera;
     }
 
 	public static void UpdateTotalPlayersGUI(int total) {
@@ -64,17 +74,33 @@ public class UIManager : MonoBehaviour
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
-    public void ChangeLayer(bool UpDown)
-    {
-        if (UpDown)
-        {
-            if (OnChangeLayerClick != null)
-                OnChangeLayerClick(1);
-        }
-        else
-        {
-            if (OnChangeLayerClick != null)
-                OnChangeLayerClick(-1);
-        }
-    }
+    //public void ChangeLayer(bool UpDown)
+    //{
+    //    if (UpDown)
+    //    {
+    //        if (OnChangeLayerClick != null)
+    //            OnChangeLayerClick(1);
+    //    }
+    //    else
+    //    {
+    //        if (OnChangeLayerClick != null)
+    //            OnChangeLayerClick(-1);
+    //    }
+    //}
+
+
+    //public static void GatherMouseHoverObjects()
+    //{
+    //    if (EventSystem.current.IsPointerOverGameObject())
+    //        return;
+
+    //    GameObject gameObj;
+
+    //    RaycastHit[] hits = Physics.RaycastAll(mainCamera.ScreenPointToRay(Input.mousePosition), 100.0F);
+
+    //    System.Array.Sort(hits, (x, y) => x.distance.CompareTo(y.distance));
+
+    //    gameObj = hits[0].transform.gameObject;
+    //}
+
 }

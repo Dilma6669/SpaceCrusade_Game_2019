@@ -13,12 +13,13 @@ public class UnitScript : MonoBehaviour
     // for the player+camera to pivot around
     GameObject _playerPivot;
 
-    private Vector3 _unitID;
-    private Vector3 _startingWorldLoc;
+    private Vector3Int _unitID;
+    private Vector3Int _startingWorldLoc;
     private int _playerControllerId;
-    private Vector3 _nodeIDUnitIsOn;
     public CubeLocationScript _cubeUnitIsOn;
     private int _pathNodeCount;
+
+    private int _unitAngle;
 
     ////////////////////////////////////////////////
 
@@ -30,7 +31,7 @@ public class UnitScript : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public Vector3 UnitID
+    public Vector3Int UnitID
     {
         get { return _unitID; }
         set { _unitID = value; }
@@ -86,6 +87,12 @@ public class UnitScript : MonoBehaviour
         set { _unitActive = value; }
     }
 
+    public int UnitAngle
+    {
+        get { return _unitAngle; }
+        set { _unitAngle = value; }
+    }
+
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
@@ -93,7 +100,7 @@ public class UnitScript : MonoBehaviour
     {
         _pathFindingNodes = new List<CubeLocationScript>();
         _rends = GetComponentsInChildren<Renderer>();
-        PlayerPivot = transform.Find("Player_Pivot").gameObject;
+        PlayerPivot = transform.FindDeepChild("Player_Pivot").gameObject;
 
         if (_pathFindingNodes == null) { Debug.LogError("We got a problem here"); }
         if (_rends == null) { Debug.LogError("We got a problem here"); }
@@ -149,11 +156,9 @@ public class UnitScript : MonoBehaviour
     }
 
 
-    public void AssignPathFindingNodes(List<CubeLocationScript> nodes)
+    public void AssignPathFindingNodesToUnit(List<CubeLocationScript> nodes)
     {
-        ClearPathFindingNodes();
         _pathFindingNodes = nodes;
-        SetUnitToNextLocation_CLIENT(_pathFindingNodes[_pathNodeCount].CubeID);
     }
 
     public void ClearPathFindingNodes()
@@ -166,15 +171,15 @@ public class UnitScript : MonoBehaviour
         _pathNodeCount = 0;
     }
 
-    public void SetUnitToNextLocation_CLIENT(Vector3 vect)
-    {
-        //if (_pathNodeCount < _pathFindingNodes.Count)
-        //{
-            //Vector3 vect = _pathFindingNodes[_pathNodeCount].CubeID;
-            CubeLocationScript script = LocationManager.GetLocationScript_CLIENT(vect);
-            CubeUnitIsOn = script;
-        //}
-        _pathNodeCount++;
-    }
+    //public void SetUnitToNextLocation_CLIENT(Vector3Int vect)
+    //{
+    //    //if (_pathNodeCount < _pathFindingNodes.Count)
+    //    //{
+    //        //Vector3Int vect = _pathFindingNodes[_pathNodeCount].CubeID;
+    //        CubeLocationScript script = LocationManager.GetLocationScript_CLIENT(vect);
+    //        CubeUnitIsOn = script;
+    //    //}
+    //    _pathNodeCount++;
+    //}
 
 }

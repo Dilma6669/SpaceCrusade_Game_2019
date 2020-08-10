@@ -1,10 +1,12 @@
 ﻿public enum CubeObjectTypes
 {
-    Empty       = 00,
+    Empty,
 
-    Panel       = 01,
+    Panel_Floor,
+    Panel_Wall,
+    Panel_Angle,
 
-    Chair01     = 02,
-    Chair02     = 03,
-    Table01     = 04,
+    Chair01,
+    Chair02,
+    Table01,
 }

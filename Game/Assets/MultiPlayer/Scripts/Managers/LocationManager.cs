@@ -12,12 +12,12 @@ public class LocationManager : MonoBehaviour
 
     ////////////////////////////////////////////////
     // CLIENT
-    public static Dictionary<Vector3, CubeLocationScript> _LocationLookup = new Dictionary<Vector3, CubeLocationScript>();   // movable locations
-    public static Dictionary<Vector3, CubeLocationScript> _LocationHalfLookup = new Dictionary<Vector3, CubeLocationScript>(); // not moveable locations BUT important for neighbour system
+    public static Dictionary<Vector3Int, CubeLocationScript> _LocationLookup = new Dictionary<Vector3Int, CubeLocationScript>();   // movable locations
+    public static Dictionary<Vector3Int, CubeLocationScript> _LocationHalfLookup = new Dictionary<Vector3Int, CubeLocationScript>(); // not moveable locations BUT important for neighbour system
 
-    public static Dictionary<Vector3, CubeLocationScript> _unitLocation = new Dictionary<Vector3, CubeLocationScript>(); // sever shit
+    public static Dictionary<Vector3Int, CubeLocationScript> _unitLocation = new Dictionary<Vector3Int, CubeLocationScript>(); // sever shit
 
-    public static Dictionary<Vector3, BaseNode> _CLIENT_nodeLookup = new Dictionary<Vector3, BaseNode>();
+    public static Dictionary<Vector3Int, BaseNode> _CLIENT_nodeLookup = new Dictionary<Vector3Int, BaseNode>();
 
     ////////////////////////////////////////////////
 
@@ -50,22 +50,23 @@ public class LocationManager : MonoBehaviour
     ////// CLIENT FUNCTIONS ////////////////////////
     ////////////////////////////////////////////////
 
-    public static void SetCubeScriptToLocation_CLIENT(Vector3 vect, CubeLocationScript script)
+    public static void SetCubeScriptToLocation_CLIENT(Vector3Int vect, CubeLocationScript script)
     {
         if (!_LocationLookup.ContainsKey(vect))
         {
-             //Debug.Log("Adding normalscript to vect: " + vect);
+            //if(vect == new Vector3(-128, 468, 882))
+            //Debug.Log("Adding FULL normalscript to vect: " + vect);
             _LocationLookup.Add(vect, script);
             return;
         }
         // Debug.LogError("trying to assign script to already taking location!!!"); // this now happens all the time because maps overlap eachother with new map system
     }
 
-    public static void SetCubeScriptToHalfLocation_CLIENT(Vector3 vect, CubeLocationScript script)
+    public static void SetCubeScriptToHalfLocation_CLIENT(Vector3Int vect, CubeLocationScript script)
     {
         if (!_LocationHalfLookup.ContainsKey(vect))
         {
-             //Debug.Log("Adding normalscript to vect: " + vect);
+             //Debug.Log("Adding HALF normalscript to vect: " + vect);
             _LocationHalfLookup.Add(vect, script);
             return;
         }
@@ -74,7 +75,7 @@ public class LocationManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public static CubeLocationScript GetLocationScript_CLIENT(Vector3 loc)
+    public static CubeLocationScript GetLocationScript_CLIENT(Vector3Int loc)
     {
         //Debug.Log("GetLocationScript");
 
@@ -87,7 +88,7 @@ public class LocationManager : MonoBehaviour
         return null;
     }
 
-    public static CubeLocationScript GetHalfLocationScript_CLIENT(Vector3 loc)
+    public static CubeLocationScript GetHalfLocationScript_CLIENT(Vector3Int loc)
     {
         //Debug.Log("GetLocationScript");
 
@@ -100,172 +101,199 @@ public class LocationManager : MonoBehaviour
     }
 
     ////////////////////////////////////////////////
-    
 
-    public static CubeLocationScript CheckIfCanMoveToCube_CLIENT(CubeLocationScript node, Vector3 neighloc, bool unitIsAlien, bool recursiveCheck = false)
+    private static bool debugStatements = false; //   turn this on to have fail attempts on move to
+    public static CubeLocationScript CheckIfCanMoveToCube_CLIENT(CubeLocationScript node, Vector3Int neighloc, bool unitIsAlien, bool recursiveCheck = false)
     {
         //Debug.Log("CheckIfCanMoveToCube_CLIENT loc: " + neighloc);
 
         CubeLocationScript neighCubeScript = GetLocationScript_CLIENT(neighloc);
 
-        neighCubeScript.IS_HUMAN_MOVABLE = false;
-        neighCubeScript.IS_ALIEN_MOVABLE = false;
-
         if (neighCubeScript == null)
         {
-            Debug.LogError("FAIL move cubeScript == null: " + neighloc);
+            if (debugStatements) { Debug.LogError("FAIL move cubeScript == null: " + neighloc); };
             return null;
         }
 
-        if (neighCubeScript.CubeIsSlope)
-        {
-            Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc);
-            return null;
-        }
+        //if (neighCubeScript.CubeIsSlope)
+        //{
+        //    if (debugStatements) { Debug.LogError("FAIL move neighCubeScript._isSlope: " + neighloc); };
+        //    return null;
+        //}
 
         if (neighCubeScript.CubeOccupied)
         {
-            Debug.LogError("FAIL move Cube is Occupied at vect:" + neighloc);
+            if (debugStatements) { Debug.LogError("FAIL move Cube is Occupied at vect:" + neighloc); };
             return null;
         }
 
-
-        // for the god damn slopes and moveing through panels (this is ugly but fuck off its working)
-        if (node != null)
-        {
-            Vector3 nodevect = node.CubeID;
-
-            // check for panel to stop going through panels
-            if (node.CubeID.y > neighloc.y)
-            {
-                Vector3 neighHalf = new Vector3(nodevect.x, nodevect.y - 1, nodevect.z);
-                CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
-                if (neighscript.CubeIsPanel)
-                {
-                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    return null;
-                }
-                // BOTTOM SLOPES //
-                Vector3 neighSlope = new Vector3(nodevect.x, nodevect.y - 2, nodevect.z);
-                neighscript = GetLocationScript_CLIENT(neighSlope);
-                if (neighscript.CubeIsSlope)
-                {
-                    //Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    int slopeAngle = neighscript._panelScriptChild._panelYAxis;
-                    if (slopeAngle == 90)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[3];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                    else if (slopeAngle == 180)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[0];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                    else if (slopeAngle == 270)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[1];
-                        if (neighloc == neighBehindVect) { return null; }
-
-                    }
-                    else if (slopeAngle == 0)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[4];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                }
-            }
-            else
-            {
-                Vector3 neighHalf = new Vector3(nodevect.x, nodevect.y + 1, nodevect.z);
-                CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
-                if (neighscript.CubeIsPanel)
-                {
-                    Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    return null;
-                }
-                // TOP SLOPES // THIS WILL NEED TO BE IMPLEMENTED AT SOME POINT FOR ALIENS
-                Vector3 neighSlope = new Vector3(nodevect.x, nodevect.y + 2, nodevect.z);
-                neighscript = GetLocationScript_CLIENT(neighSlope);
-                if (neighscript.CubeIsSlope)
-                {
-                    Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc);
-                    int slopeAngle = neighscript._panelScriptChild._panelYAxis;
-                    if (slopeAngle == 90)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[3];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                    else if (slopeAngle == 180)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[0];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                    else if (slopeAngle == 270)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[1];
-                        if (neighloc == neighBehindVect) { return null; }
-
-                    }
-                    else if (slopeAngle == 0)
-                    {
-                        Vector3 neighBehindVect = node.NeighbourVects[4];
-                        if (neighloc == neighBehindVect) { return null; }
-                    }
-                }
-            }
-        }
+        //if (node != null) // For panels inbetween cube Platforms
+        //{
+        //    Vector3 result = (node.CubeID - neighloc);
+        //    Vector3Int midDiff = new Vector3Int(Mathf.FloorToInt(result.x * 0.5f), Mathf.FloorToInt(result.y * 0.5f), Mathf.FloorToInt(result.z * 0.5f));
+        //    Vector3Int midHalfVect = node.CubeID - midDiff;
 
 
-        if (!neighCubeScript.CubePlatform)
-        {
-            if (recursiveCheck)
-            {
-                Debug.LogError("FAIL !neighCubeScript.CubePlatform: " + neighloc);
-                return null;
-            }
+        //    Debug.Log("node.CubeID >> " + node.CubeID);
+        //    Debug.Log("neighloc >> " + neighloc);
+        //    Debug.Log("midDiff >> " + midDiff);
+        //    Debug.Log("midHalfVect >> " + midHalfVect);
 
-            // making climbable edges ///
-            if (node != null)
-            {
-                List<Vector3> newNeighVects = node.NeighbourVects;
-                foreach (Vector3 newVect in newNeighVects)
-                {
-                    //Debug.Log("RECURSIVE CheckIfCanMoveToCube_CLIENT loc: " + newVect);
-                    CubeLocationScript script = CheckIfCanMoveToCube_CLIENT(node, newVect, unitIsAlien, true);
-                    if (script != null)
-                    {
-                        //Debug.Log("SUCCES move to loc: " + newVect);
-                        return neighCubeScript; // if climable neighboursing node return true
-                    }
-                }
-            }
-            ///////
+        //    CubeLocationScript midHalfnode = GetHalfLocationScript_CLIENT(midHalfVect);
 
-            //Debug.LogError("FAIL move cubeScript not CubeMoveable: " + neighloc);
-            return null;
-        }
+        //    if (midHalfnode != null)
+        //    {
+        //        if (midHalfnode.CubeIsPanel)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL mid Half Cube is Panel at vect:" + neighloc); };
+        //            return null;
+        //        }
+        //    }
+        //}
 
+        //// FOR THE FUCKEN SLOPES and moveing through panels (this is ugly but fuck off its working) // NOTE MIGHT NEED TO REMOVE STRAIGHT UP AND DOWN FROM THESE NEXT CHECKS
+        //if (node != null)
+        //{
+        //    Vector3Int nodevect = node.CubeID;
 
-        if (!unitIsAlien)  // if human
-        {
-            if (neighCubeScript.IsHumanWalkable == false && neighCubeScript.IsHumanClimbable == false && neighCubeScript.IsHumanJumpable == false)
-            {
-                Debug.LogError("FAIL move error Human walkable/climable/jumpable: " + neighloc);
-                Debug.LogFormat("FAIL walkable/climable/jumpable: {0} , {1} , {2}", neighCubeScript.IsHumanWalkable, neighCubeScript.IsHumanClimbable, neighCubeScript.IsHumanJumpable);
-                return null;
-            }
-            neighCubeScript.IS_HUMAN_MOVABLE = true;
-        }
-        else if (unitIsAlien) // alien
-        {
-            if (neighCubeScript.IsAlienWalkable == false && neighCubeScript.IsAlienClimbable == false && neighCubeScript.IsAlienJumpable == false)
-            {
-               Debug.LogError("FAIL move error ALIEN walkable/climable/jumpable: " + neighloc);
-                return null;
-            }
-            neighCubeScript.IS_ALIEN_MOVABLE = true;
-        }
+        //    if (node.CubeID.y > neighloc.y)
+        //    {
+        //        // check for panel to stop going through panels
+        //        Vector3Int neighHalf = new Vector3Int(nodevect.x, nodevect.y - 1, nodevect.z);
+        //        CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
+        //        if (neighscript == null)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript == null:" + neighloc); };
+        //            return null;
+        //        }
+        //        if (neighscript.CubeIsPanel)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc); };
+        //            return null;
+        //        }
+
+        //        // BOTTOM SLOPES //
+        //        Vector3Int neighSlope = new Vector3Int(nodevect.x, nodevect.y - 2, nodevect.z);
+        //        neighscript = GetLocationScript_CLIENT(neighSlope);
+        //        if (neighscript == null)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript == null:" + neighloc); };
+        //            return null;
+        //        }
+        //        if (neighscript == null)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc); };
+        //            return null;
+        //        }
+        //        if (neighscript.CubeIsSlope)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc); };
+        //            int slopeAngle = neighscript._panelScriptChild._panelYAxis;
+        //            if (slopeAngle == 90)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[3];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //            else if (slopeAngle == 180)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[0];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //            else if (slopeAngle == 270)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[1];
+        //                if (neighloc == neighBehindVect) { return null; }
+
+        //            }
+        //            else if (slopeAngle == 0)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[4];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //        }
+        //    }
+        //    else if (node.CubeID.y < neighloc.y)
+        //    {
+        //        // check for panel to stop going through panels
+        //        Vector3Int neighHalf = new Vector3Int(nodevect.x, nodevect.y + 1, nodevect.z);
+        //        CubeLocationScript neighscript = GetHalfLocationScript_CLIENT(neighHalf);
+        //        if(neighscript == null)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript == null:" + neighloc); };
+        //            return null;
+        //        }
+        //        if (neighscript.CubeIsPanel)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc); };
+        //            return null;
+        //        }
+
+        //        // TOP SLOPES // THIS WILL NEED TO BE IMPLEMENTED AT SOME POINT FOR ALIENS
+        //        Vector3Int neighSlope = new Vector3Int(nodevect.x, nodevect.y + 2, nodevect.z);
+        //        neighscript = GetLocationScript_CLIENT(neighSlope);
+        //        if (neighscript == null)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript == null:" + neighloc); };
+        //            return null;
+        //        }
+        //        if (neighscript.CubeIsSlope)
+        //        {
+        //            if (debugStatements) { Debug.LogError("FAIL move neighscript.CubeIsPanel:" + neighloc); };
+        //            int slopeAngle = neighscript._panelScriptChild._panelYAxis;
+        //            if (slopeAngle == 90)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[3];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //            else if (slopeAngle == 180)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[0];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //            else if (slopeAngle == 270)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[1];
+        //                if (neighloc == neighBehindVect) { return null; }
+
+        //            }
+        //            else if (slopeAngle == 0)
+        //            {
+        //                Vector3Int neighBehindVect = node.NeighbourVects[4];
+        //                if (neighloc == neighBehindVect) { return null; }
+        //            }
+        //        }
+        //    }
+        //}
+
+        //if (!neighCubeScript.CubePlatform)
+        //{
+        //    if (recursiveCheck)
+        //    {
+        //        if (debugStatements) { Debug.LogError("RECURSIVE FAIL !neighCubeScript.CubePlatform: " + neighloc); };
+        //        return null;
+        //    }
+
+        //    // making climbable edges ///
+        //    if (node != null)
+        //    {
+        //        List<Vector3Int> newNeighVects = node.NeighbourVects;
+        //        foreach (Vector3Int newVect in newNeighVects)
+        //        {
+        //            if (debugStatements) { Debug.Log("RECURSIVE CheckIfCanMoveToCube_CLIENT loc: " + newVect); };
+        //            CubeLocationScript script = CheckIfCanMoveToCube_CLIENT(node, newVect, unitIsAlien, true);
+        //            if (script != null)
+        //            {
+        //                //Debug.Log("SUCCES move to loc: " + newVect);
+        //                return neighCubeScript; // if climable neighboursing node return true
+        //            }
+        //        }
+        //    }
+        //    ///////
+
+        //    if (debugStatements) { Debug.LogError("FAIL move cubeScript not CubeMoveable: " + neighloc); };
+        //    return null;
+        //}
+
 
         //Debug.Log("Unit CAN move to loc: " + neighloc);
         return neighCubeScript;
@@ -274,12 +302,9 @@ public class LocationManager : MonoBehaviour
 
     ///////////////////////////////////////////
 
-    public static bool SetUnitOnCube_CLIENT(UnitScript unitScript, Vector3 loc)
+    public static bool SetUnitOnCube_CLIENT(UnitScript unitScript, Vector3Int loc)
     {
-
-        Debug.Log("SetUnitOnCube_CLIENT " + loc);
-
-        Vector3 unitId = unitScript.UnitID;
+        Vector3Int unitId = unitScript.UnitID;
         CubeLocationScript cubescript = CheckIfCanMoveToCube_CLIENT(unitScript.CubeUnitIsOn, loc, unitScript.UnitCanClimbWalls);
         if (cubescript != null)
         {
@@ -294,8 +319,13 @@ public class LocationManager : MonoBehaviour
                 _unitLocation[unitId] = cubescript;
             }
             cubescript.CubeOccupied = true;
+
             unitScript.CubeUnitIsOn = cubescript;
-            Debug.Log("SetUnitOnCube loc:  " + loc);
+
+            //if (unitScript.CubeUnitIsOn != null && unitScript.CubeUnitIsOn._platform_Panel_Cube != null)
+            //{
+            //    cubescript._platform_Panel_Cube._panelScriptChild.PanelPieceChangeColor("Pink");
+            //}
             return true;
         }
         else
@@ -307,7 +337,7 @@ public class LocationManager : MonoBehaviour
 
     //////////////////////////////////////////////
 
-    public static void SaveNodeTo_CLIENT(Vector3 vect, BaseNode node)
+    public static void SaveNodeTo_CLIENT(Vector3Int vect, BaseNode node)
     {
         if (!_CLIENT_nodeLookup.ContainsKey(vect))
         {
@@ -321,7 +351,7 @@ public class LocationManager : MonoBehaviour
     }
 
 
-    public static BaseNode GetNodeFrom_Client(Vector3 loc)
+    public static BaseNode GetNodeFrom_Client(Vector3Int loc)
     {
         //Debug.Log("GetLocationScript");
 
@@ -335,35 +365,10 @@ public class LocationManager : MonoBehaviour
 
     //////////////////////////////////////////////
 
-    public static void SetCubeActive_CLIENT(bool onOff, Vector3 location)
-    {
-        if (_activeCube)
-        {
-            _activeCube.GetComponent<CubeLocationScript>().CubeActive(false);
-            _activeCube = null;
-        }
-
-        if (onOff)
-        {
-            if (GetLocationScript_CLIENT(location) != null)
-            {
-                _activeCube = GetLocationScript_CLIENT(location);
-                _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
-            }
-            else if (GetHalfLocationScript_CLIENT(location) != null)
-            {
-                _activeCube = GetHalfLocationScript_CLIENT(location);
-                _activeCube.GetComponent<CubeLocationScript>().CubeActive(true);
-            }
-
-           UnitsManager.MakeActiveUnitMove_CLIENT(location); // this just checks is a unit is currently selected and then does the moving shit
-        }
-    }
-
     // tries to spawn visual nodes in all current moveable locations for a unit
     public static void DebugTestPathFindingNodes_CLIENT(UnitScript unitScript)
     {
-        foreach (KeyValuePair<Vector3, CubeLocationScript> element in _LocationLookup)
+        foreach (KeyValuePair<Vector3Int, CubeLocationScript> element in _LocationLookup)
         {
             Debug.Log("DebugTestPathFindingNodes_CLIENT ");
             CubeLocationScript script = CheckIfCanMoveToCube_CLIENT(unitScript.CubeUnitIsOn, element.Key, unitScript.UnitCanClimbWalls);

@@ -49,9 +49,9 @@ public class WorldManager : MonoBehaviour {
         Random.InitState(GlobalSeed);
 
         // Get the World Nodes
-        WorldBuilder.BuildWorldNodes();
+        WorldBuilder.BuildEnvironmentNodes();
 
-        LayerManager.MakeAllNodeLayersVisible();
+        //LayerManager.MakeAllNodeLayersVisible();
 
         Debug.Log("FINSIHED Building World!!!!!!!!");
     }

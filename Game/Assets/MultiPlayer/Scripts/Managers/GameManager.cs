@@ -37,7 +37,7 @@ public class GameManager : MonoBehaviour {
 
     void Start()
     {
-        _WorldManager       = transform.Find("WorldManager").gameObject;
+        _WorldManager       = transform.Find("WorldManager").gameObject; 
         _PlayerManager      = transform.Find("PlayerManager").gameObject;
         _LocationManager    = transform.Find("LocationManager").gameObject;
         _MovementManager    = transform.Find("MovementManager").gameObject;
@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour {
         _UnitsManager       = transform.Find("UnitsManager").gameObject;
         _LayerManager       = transform.Find("LayerManager").gameObject;
 
-        if (_WorldManager == null)      { Debug.LogError("We got a problem here"); }
+        if (_WorldManager == null)      { Debug.LogError("We got a problem here"); } 
         if (_PlayerManager == null)     { Debug.LogError("We got a problem here"); }
         if (_LocationManager == null)   { Debug.LogError("We got a problem here"); }
         if (_MovementManager == null)   { Debug.LogError("We got a problem here"); }

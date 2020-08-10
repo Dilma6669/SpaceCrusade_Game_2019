@@ -54,6 +54,9 @@ public class PlayerAgent : NetworkBehaviour
         PlayerManager.UnitsAgent = GetComponent<UnitsAgent>();
         PlayerManager.NetworkAgent = GetComponent<NetworkAgent>();
 
+        WorldManager.BuildWorldForClient();
+
+
         PlayerManager.SetUpPlayer();
 
         NetworkInstanceID = GetComponent<NetworkIdentity>().netId;
@@ -62,7 +65,6 @@ public class PlayerAgent : NetworkBehaviour
         UIManager.SetUpPlayersGUI(PlayerManager.PlayerID);
         CameraManager.SetUpCameraAndLayers(PlayerManager.PlayerID, GetComponent<CameraAgent>());
 
-        WorldManager.BuildWorldForClient();
     }
 
 
@@ -76,7 +78,7 @@ public class PlayerAgent : NetworkBehaviour
         PlayerManager.PlayerLoaded();
     }
 
-    public void SetUpPlayerStartPosition(Vector3 camPos, Quaternion camRot)
+    public void SetUpPlayerStartPosition(Vector3Int camPos, Quaternion camRot)
     {
         transform.position = camPos;
         transform.rotation = camRot;

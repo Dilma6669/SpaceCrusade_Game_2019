@@ -31,29 +31,10 @@ public class CameraManager : MonoBehaviour
 
         KeyValuePair<Vector3Int, Vector3Int> camStartPos = GetCameraStartPosition(playerID);
 
-        Debug.Log("fuck playerID " + playerID);
-        Debug.Log("fuck camStartPos.key " + camStartPos.Key);
-
-        Vector3 camPos = camStartPos.Key;
+        Vector3Int camPos = camStartPos.Key;
         Quaternion camRot = Quaternion.Euler(camStartPos.Value);
 
         PlayerManager.PlayerAgent.SetUpPlayerStartPosition(camPos, camRot);
-
-        PlayerManager.CameraAgent._cameraPivotScript.angleH = camRot.eulerAngles.y;
-        PlayerManager.CameraAgent._cameraPivotScript.angleV = -camRot.eulerAngles.x;
-
-        /*
-
-        // reveal layers up to current
-        for (int i = 0; i <= _currLayer; i++) 
-        {
-            _camera.cullingMask |= 1 << LayerMask.NameToLayer("Floor" + i.ToString ());
-        }
-        */
-
-        // units have already been put into correct layer now need to make camera see layer
-        //string layerStr = "Player0" + playerID.ToString () + "Units";
-        //_camera.cullingMask |= 1 << LayerMask.NameToLayer (layerStr);
     }
 
     public static KeyValuePair<Vector3Int, Vector3Int> GetCameraStartPosition(int playerID = -1)

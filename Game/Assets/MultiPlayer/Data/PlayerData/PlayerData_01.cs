@@ -18,57 +18,30 @@ public class PlayerData_01 : BasePlayerData
             new UnitStruct()
             {
                 UnitModel = 0,
-                UnitCanClimbWalls = false,
+                UnitCanClimbWalls = true,
                 UnitCombatStats = new int[2]{ 1, 4 }, // Rank, Movement
-                UnitShipLoc = new Vector3(6, -2, 4),
-                UnitRot = new Vector3(0, 90, 0),
+                UnitShipLoc = new Vector3Int(-8, -4, -8),
+                UnitRot = new Vector3Int(0, 0, 0),
             },
 
             new UnitStruct()
             {
                 UnitModel = 0,
-                UnitCanClimbWalls = false,
+                UnitCanClimbWalls = true,
                 UnitCombatStats = new int[2]{ 0, 4 },
-                UnitShipLoc = new Vector3(4, -2, 6),
-                UnitRot = new Vector3(0, 0, 0),
+                UnitShipLoc = new Vector3Int(-8, -4, -6),
+                UnitRot = new Vector3Int(0, 0, 0),
             }
         };
 
-        shipSize = new Vector3(3, 1, 1);
 
-        shipMapPieces = new List<MapPieceStruct>()
+        shipMapPieces = new Dictionary<int, int[]>()
         {
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_01
-            },
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_02
-            },
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_02
-            },
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_02
-            },
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_02
-            },
-            new MapPieceStruct()
-            {
-                nodeType = NodeTypes.MapNode,
-                mapPiece = MapPieceTypes.MapPiece_Corridor_01
-            },
+            // LocID            Maptype                                Rotation  other info
+            { 356 , new int[] { (int)MapPieceTypes.Simple_Room_Doors,    0,      0,0 } },
+            { 365 , new int[] { (int)MapPieceTypes.Simple_Room_Doors,    0,      0,0 } },
+            { 374 , new int[] { (int)MapPieceTypes.Simple_Room_Doors,    0,      0,0 } },
+            { 446 , new int[] { (int)MapPieceTypes.Simple_Room_Doors,    0,      0,0 } }
         };
-        /////////////////////////////////////////////////////////////////
     }
 }

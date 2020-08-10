@@ -18,13 +18,9 @@ public class MapPieceBuilder : MonoBehaviour {
 
     private static List<CubeLocationScript> halfCubesWithPanels = new List<CubeLocationScript>(); 
 
-    private static int[] neighbours;
+    private static List<Vector3Int> neighbourVects;
 
-    private static int[] worldNeighbours;
-
-    private static int layerCount = -1;
-
-    private static int nodeLayerCounter = 0;
+    private static List<Vector3Int> worldNeighbours;
 
     ////////////////////////////////////////////////
 
@@ -64,46 +60,92 @@ public class MapPieceBuilder : MonoBehaviour {
         foreach (CubeLocationScript script in halfCubesWithPanels)
         {
             script.AssignCubeNeighbours();
+
+            Vector3Int cubeLoc = script.CubeID;
+            CubeObjectTypes panelType = script.GetCubePanel.gameObject.GetComponent<ObjectScript>().objectType;
+            int panelYAxis = script.GetCubePanel._panelYAxis;
+
+            CubeLocationScript halfScript = null;
+
+            switch (panelType)
+            {
+                case CubeObjectTypes.Panel_Floor:
+                    for(int i = 5; i <= 12; i++)
+                    {
+                        halfScript = LocationManager.GetHalfLocationScript_CLIENT(script.NeighbourHalfVects[i]);
+                        if (halfScript != null) { halfScript.CubeIsPanel = true; };
+                    }
+                    break;
+                case CubeObjectTypes.Panel_Wall:
+                    if (panelYAxis == 0)
+                    {
+                        int[] indexs = new int[8] { 0, 2, 4, 6, 11, 13, 15, 17 };
+                        foreach (int i in indexs)
+                        {
+                            halfScript = LocationManager.GetHalfLocationScript_CLIENT(script.NeighbourHalfVects[i]);
+                            if (halfScript != null) { halfScript.CubeIsPanel = true; };
+                        }
+                    }
+                    if (panelYAxis == 90)
+                    {
+                        int[] indexs = new int[8] { 1, 2, 3, 8, 9, 14, 15, 16 };
+                        foreach (int i in indexs)
+                        {
+                            halfScript = LocationManager.GetHalfLocationScript_CLIENT(script.NeighbourHalfVects[i]);
+                            if (halfScript != null) { halfScript.CubeIsPanel = true; };
+                        }
+                    }
+                    break;
+                case CubeObjectTypes.Panel_Angle: 
+                    if (panelYAxis == 0)
+                    {
+
+                    }
+                    if (panelYAxis == 90)
+                    {
+
+                    }
+                    if (panelYAxis == 180)
+                    {
+
+                    }
+                    if (panelYAxis == 270)
+                    {
+
+                    }
+                    break;
+                default:
+                    break;
+            }
+
         }
         halfCubesWithPanels.Clear();
     }
 
-    public static void SetWorldNodeNeighboursForDock(int[] worldNodes)
+    public static void SetWorldNodeNeighboursForDock(List<Vector3Int> worldNeigh)
     {
-        worldNeighbours = worldNodes;
+        worldNeighbours = worldNeigh;
     }
 
     //////////////////////////////////////////////
 
-    public static void AttachMapPieceToNode<T>(T node) where T : BaseNode 
+    public static void BuildMap(MapNode node) 
     {
         MapFloorData.Clear(); // storing data for serialzatino
         MapVentData.Clear();
 
-        halfCubesWithPanels.Clear();
+        neighbourVects = node.neighbourVects;
 
-        neighbours = node.neighbours;
-        layerCount = 2;
+        Vector3Int nodeLoc = node.NodeID;
 
-        nodeLayerCounter = 0;
+        int startGridLocX = -((MapSettings.MapNodeCountDistanceXZ / 2)); // local Positions
+        int startGridLocY = -((MapSettings.MapNodeCountDistanceY / 2));
+        int startGridLocZ = -((MapSettings.MapNodeCountDistanceXZ / 2));
 
-        BuildMapsByIEnum(node);
-
-    }
+        Vector3Int localGridLoc;
 
 
-    private static void BuildMapsByIEnum<T>(T node) where T : BaseNode
-    {
-        Vector3 nodeLoc = node.NodeLocation;
-        int rotations = node.NodeDirection;
-
-        int startGridLocX = (int)nodeLoc.x - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesXZ / 2);
-        int startGridLocY = (int)nodeLoc.y - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesY / 2);
-        int startGridLocZ = (int)nodeLoc.z - (int)Mathf.Floor(MapSettings.sizeOfMapPiecesXZ / 2);
-
-        Vector3 GridLoc;
-
-        List<int[]> layers = GetMapPiece(node.NodeMapPiece);
+        List<int[]> layers = LoadDataFromMapTextDoc(node.NodeMapPiece);
 
         /*
            if (node.entrance)
@@ -114,62 +156,29 @@ public class MapPieceBuilder : MonoBehaviour {
            }
            */
 
-
         int objectsCountX = startGridLocX;
         int objectsCountY = startGridLocY;
         int objectsCountZ = startGridLocZ;
 
         int cubeCounter = 0;
-        for (int y = 0; y < MapSettings.sizeOfMapPiecesY; y++)
+        for (int y = 0; y < MapSettings.NodeCountOfMapPiecesY; y++)
         {
-
             objectsCountX = startGridLocX;
             objectsCountZ = startGridLocZ;
 
-           // floor = layers;
-
-
-            // for an extra layer roof of the vents only appearing if no map piece above vent
-            if (!node.entrance)
-            {
-                if (y == (layers.Count - 1) && neighbours[5] != -1)
-                {
-                    continue; // if so, skip last layer
-                }
-            }
-
-
-            for (int r = 0; r < rotations; r++)
-            {
-            
-                /*
-                if(floorORRoof) // storing the map data for serilisation and other shit still to work out
-                { // have to implement this at some stage
-                    floorDataToReturn.Add(floor);
-                }
-                else
-                {
-                    ventDataToReturn.Add(floor);
-                }
-                */
-            }
-
-            for (int z = 0; z < MapSettings.sizeOfMapPiecesXZ; z++)
+            for (int z = 0; z < MapSettings.NodeCountOfMapPiecesXZ; z++)
             {
                 objectsCountX = startGridLocX;
 
-                for (int x = 0; x < MapSettings.sizeOfMapPiecesXZ; x++)
+                for (int x = 0; x < MapSettings.NodeCountOfMapPiecesXZ; x++)
                 {
-                    GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
+                    localGridLoc = new Vector3Int(objectsCountX, objectsCountY, objectsCountZ);
 
                     if (layers != null && layers[cubeCounter] != null)
                     {
                         int[] cubeData = layers[cubeCounter];
 
-                        //cubeType = FigureOutDoors(node, _mapType, cubeType, rotations);
-                        int nodeLayercount = node.GetComponent<T>().NodeLayerCount + nodeLayerCounter;
-
-                        CubeLocationScript cubeScript = CubeBuilder.CreateCubeObject(GridLoc, cubeData, rotations, nodeLayercount, node.gameObject.transform); // Create the cube // TIDY THIS UP
+                        CubeLocationScript cubeScript = CubeBuilder.CreateCubeObject(localGridLoc, cubeData,  node.gameObject.transform); // Create the cube // TIDY THIS UP
 
                         // A test to see if cube has panel to try make connecting neighbours easier
                         if (cubeScript && cubeScript.CubeIsPanel)
@@ -183,11 +192,6 @@ public class MapPieceBuilder : MonoBehaviour {
                     objectsCountX += 1;
                 }
                 objectsCountZ += 1;
-            }
-
-            if (y % 2 != 0)
-            {
-                nodeLayerCounter++;
             }
             objectsCountY += 1;
         }
@@ -251,7 +255,7 @@ public class MapPieceBuilder : MonoBehaviour {
         if (nodeCount == 1 || nodeCount == 3 || nodeCount == 5 || nodeCount == 7) // FOR THE GROUND FLOOR
         {
             // if no world neighbour is present, then just make a floor, else make a wall
-            var1 = (worldNeighbours[neigh1] == -1) ? 0 : 1;
+            var1 = (worldNeighbours[neigh1] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
 
             if (var1 == 0)
             {
@@ -272,7 +276,7 @@ public class MapPieceBuilder : MonoBehaviour {
                  nodeCount == 19 || nodeCount == 21 || nodeCount == 23 || nodeCount == 25)
         {
             // if no world neighbour is present, then just make a floor, else make a wall
-            var1 = (worldNeighbours[neigh1] == -1) ? 0 : 1;
+            var1 = (worldNeighbours[neigh1] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
 
             if (var1 == 0)
             {
@@ -291,8 +295,8 @@ public class MapPieceBuilder : MonoBehaviour {
         }
         else if (nodeCount == 0 || nodeCount == 2 || nodeCount == 6 || nodeCount == 8) // FOR THE GROUND FLOOR
         {
-            var1 = (worldNeighbours[neighs2[0]] == -1) ? 0 : 1;
-            var2 = (worldNeighbours[neighs2[1]] == -1) ? 0 : 1;
+            var1 = (worldNeighbours[neighs2[0]] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
+            var2 = (worldNeighbours[neighs2[1]] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
 
 
             if (var1 == 0 && var2 == 0)
@@ -323,8 +327,8 @@ public class MapPieceBuilder : MonoBehaviour {
         else if (nodeCount == 9 || nodeCount == 11 || nodeCount == 15 || nodeCount == 17 || // FOR THE HIGHER FLOORS
                 nodeCount == 18 || nodeCount == 20 || nodeCount == 24 || nodeCount == 26)
         {
-            var1 = (worldNeighbours[neighs2[0]] == -1) ? 0 : 1;
-            var2 = (worldNeighbours[neighs2[1]] == -1) ? 0 : 1;
+            var1 = (worldNeighbours[neighs2[0]] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
+            var2 = (worldNeighbours[neighs2[1]] == new Vector3Int(-1, -1, -1)) ? 0 : 1;
 
 
             if (var1 == 0 && var2 == 0)
@@ -356,136 +360,6 @@ public class MapPieceBuilder : MonoBehaviour {
         return new KeyValuePair<int, int>(mapPiece, rotation);
     }
 
-
-
-
-    ///////
-    private static int FigureOutDoors<T>(T node, int _mapType, int _cubeType, int rotations) where T : BaseNode
-    {
-        int originalCubeType = _cubeType;
-
-        Dictionary<int, int> cubeTypeAndWallType = new Dictionary<int, int>()
-        {
-            { 50, 1 },
-            { 51, 3 },
-            { 52, 2 },
-            { 53, 2 },
-            { 54, 3 },
-            { 55, 1 }
-        };
-
-        if (cubeTypeAndWallType.ContainsKey(_cubeType))
-        {
-            if (rotations == 1)
-            { 
-                if (_cubeType == 51)
-                {
-                    _cubeType = 53;
-                }
-                else if (_cubeType == 52)
-                {
-                    _cubeType = 51;
-                }
-                else if (_cubeType == 53)
-                {
-                    _cubeType = 54;
-                }
-                else if (_cubeType == 54)
-                {
-                    _cubeType = 52;
-                }
-            }
-            else if (rotations == 2)
-            {
-                if (_cubeType == 51)
-                {
-                    _cubeType = 54;
-                }
-                else if (_cubeType == 52)
-                {
-                    _cubeType = 53;
-                }
-                else if (_cubeType == 53)
-                {
-                    _cubeType = 52;
-                }
-                else if (_cubeType == 54)
-                {
-                    _cubeType = 51;
-                }
-            }
-            else if (rotations == 3)
-            {
-                if (_cubeType == 51)
-                {
-                    _cubeType = 52;
-                }
-                else if (_cubeType == 52)
-                {
-                    _cubeType = 54;
-                }
-                else if (_cubeType == 53)
-                {
-                    _cubeType = 51;
-                }
-                else if (_cubeType == 54)
-                {
-                    _cubeType = 53;
-                }
-            }
-            int index = _cubeType - 50;
-
-            //Debug.Log("fuceken jezus _cubeType: " + _cubeType);
-            //Debug.Log("fuceken jezus index: " + index);
-
-            // stay in here
-            if (_mapType == MapSettings.MAPTYPE_SHIPPORT_FLOOR) // shipYard
-            {
-                if (worldNeighbours[index] != -1) // if world neighbour present
-                {
-                    if (neighbours[index] != -1) // if neighbour present
-                    {
-                        return 0; // return no wall
-                    }
-                    else
-                    {
-                        return cubeTypeAndWallType[originalCubeType]; // return wall
-                    }
-                }
-                else // if world neighbour IS NOT present
-                {
-                    return cubeTypeAndWallType[originalCubeType]; // return wall
-                }
-            }
-            ///////
-
-
-
-            if (neighbours[index] == -1) // no neighbour (Space)
-            {
-                return cubeTypeAndWallType[originalCubeType]; // return wall
-            }
-            else
-            {   // this is for the floors no connectors UP to cover the vents below it. kind of a special case really
-                if (_mapType == MapSettings.MAPTYPE_CONNECT_UP_FLOOR && _cubeType == 50) 
-                {
-                    //if (worldNeighbours[0] != -1)
-                    //{
-                    //    int neighIndex = node.worldNodeParent.neighbours[0]; // need to know the vect of neighbours
-                    //    //WorldNode worldBottomNeighbour =  .LocationManager._LocationLookup[neighIndex];
-                    //}
-                }
-            }
-        }
-        return originalCubeType;
-    }
-
-
-    private static List<int[]> GetMapPiece(MapPieceTypes mapPieceType)
-    {
-        return LoadDataFromMapTextDoc(mapPieceType);
-    }
-
     private static List<int[]> LoadDataFromMapTextDoc(MapPieceTypes mapPiece)
     {
         string textFileName = "MapData/" + mapPiece.ToString();
@@ -510,7 +384,7 @@ public class MapPieceBuilder : MonoBehaviour {
 
                 if (line.Length > 1)
                 {
-                    int[] dataArray = new int[6];
+                    int[] dataArray = new int[7];
 
                     dataArray[0] = int.Parse(data[0]);
                     dataArray[1] = int.Parse(data[1]);
@@ -518,6 +392,7 @@ public class MapPieceBuilder : MonoBehaviour {
                     dataArray[3] = int.Parse(data[3]);
                     dataArray[4] = int.Parse(data[4]);
                     dataArray[5] = int.Parse(data[5]);
+                    dataArray[6] = int.Parse(data[6]);
 
                     array.Add(dataArray);
                 }

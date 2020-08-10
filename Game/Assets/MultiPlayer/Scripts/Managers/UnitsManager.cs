@@ -13,9 +13,14 @@ public class UnitsManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public static Dictionary<int, Dictionary<Vector3, UnitScript>> _unitObjectsByPlayerID;
+    public static Dictionary<int, Dictionary<Vector3Int, UnitScript>> _unitObjectsByPlayerID;
 
     private static UnitScript _activeUnit = null;
+
+    public static UnitScript ActiveUnit
+    {
+        get { return _activeUnit; }
+    }
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
@@ -36,7 +41,7 @@ public class UnitsManager : MonoBehaviour
     {
         _unitBuilder = transform.Find("UnitBuilder").GetComponent<UnitBuilder>();
 
-        _unitObjectsByPlayerID = new Dictionary<int, Dictionary<Vector3, UnitScript>>();
+        _unitObjectsByPlayerID = new Dictionary<int, Dictionary<Vector3Int, UnitScript>>();
     }
 
     ////////////////////////////////////////////////
@@ -58,29 +63,34 @@ public class UnitsManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public static void CreateUnitOnClient(NetworkNodeStruct networkNodeStruct, int playerID) // an attempt to make units like ships
+    public static void CreateUnitOnClient(NetworkNodeStruct nodeStruct, int playerID) // an attempt to make units like ships
     {
-        Debug.Log("CreateUnitOnClient " + networkNodeStruct.unitData.UnitStartingNodeID);
+        Vector3Int nodeID = new Vector3Int(Mathf.FloorToInt(nodeStruct.NodeID.x), Mathf.FloorToInt(nodeStruct.NodeID.y), Mathf.FloorToInt(nodeStruct.NodeID.z));
 
-        CubeLocationScript cubeScript = LocationManager.GetLocationScript_CLIENT(networkNodeStruct.NodeID);
+        //Debug.Log("CreateUnitOnClient UnitStartingNodeID " + nodeStruct.UnitData.UnitStartingNodeID);
+        //Debug.Log("CreateUnitOnClient nodeID " + nodeID);
+
+        CubeLocationScript cubeScript = LocationManager.GetLocationScript_CLIENT(nodeID);
+
+        //cubeScript.MapNodeParent.ActivateMapPiece(true);
 
         if (cubeScript != null)
         {
-            GameObject prefab = UnitsManager._unitBuilder.GetUnitModel(networkNodeStruct.unitData.UnitModel);
+            GameObject prefab = _unitBuilder.GetUnitModel(nodeStruct.UnitData.UnitModel);
             GameObject unit = Instantiate(prefab, cubeScript.gameObject.transform, false);
             unit.transform.SetParent(cubeScript.gameObject.transform);
-            unit.transform.localPosition = networkNodeStruct.CurrLoc;
+            unit.transform.localPosition = nodeStruct.CurrLoc;
             GameObject unitContainer = unit.transform.FindDeepChild("UnitContainer").gameObject;
-            unitContainer.transform.localEulerAngles = networkNodeStruct.CurrRot;
+            unitContainer.transform.localEulerAngles = nodeStruct.CurrRot;
 
             UnitScript unitScript = unit.GetComponent<UnitScript>();
 
-            unitScript.UnitData = networkNodeStruct.unitData;
-            unitScript.UnitID = networkNodeStruct.NodeID;
+            unitScript.UnitData = nodeStruct.UnitData;
+            unitScript.UnitID = nodeID;
             unitScript.PlayerControllerID = playerID;
-            unitScript.UnitModel = networkNodeStruct.unitData.UnitModel;
-            unitScript.UnitCanClimbWalls = networkNodeStruct.unitData.UnitCanClimbWalls;
-            unitScript.UnitCombatStats = networkNodeStruct.unitData.UnitCombatStats;
+            unitScript.UnitModel = nodeStruct.UnitData.UnitModel;
+            unitScript.UnitCanClimbWalls = nodeStruct.UnitData.UnitCanClimbWalls;
+            unitScript.UnitCombatStats = nodeStruct.UnitData.UnitCombatStats;
 
             LocationManager.SetUnitOnCube_CLIENT(unit.GetComponent<UnitScript>(), unitScript.UnitID); //sets CubeUnitIsOn
 
@@ -89,27 +99,26 @@ public class UnitsManager : MonoBehaviour
 
             if (PlayerManager.PlayerID == playerID)
             {
-                if (networkNodeStruct.unitData.UnitCombatStats[0] == 1) // if rank is 'Captain'???? then make active
+                if (nodeStruct.UnitData.UnitCombatStats[0] == 1) // if rank is 'Captain'???? then make active
                 {
                     SetUnitActive(true, playerID, unitScript.UnitID);
-                    AssignCameraToActiveUnit();
                 }
             }
             Debug.Log("Unit Succesfully created on CLIENT: " + unitScript.UnitID);
         }
         else
         {
-            Debug.LogError("Got a problem here > " + networkNodeStruct.NodeID);
+            Debug.LogError("Got a problem here > " + nodeID);
         }
     }
 
     ////////////////////////////////////////////////
 
-    public static void AddUnitToGame(int playerContID, Vector3 unitID, UnitScript unit)
+    public static void AddUnitToGame(int playerContID, Vector3Int unitID, UnitScript unit)
     {
         if (_unitObjectsByPlayerID.ContainsKey(playerContID))
         {
-            Dictionary<Vector3, UnitScript> unitList = _unitObjectsByPlayerID[playerContID];
+            Dictionary<Vector3Int, UnitScript> unitList = _unitObjectsByPlayerID[playerContID];
 
             //Debug.Log("unitID " + unitID);
 
@@ -125,7 +134,7 @@ public class UnitsManager : MonoBehaviour
         }
         else
         {
-            Dictionary<Vector3, UnitScript> unitList = new Dictionary<Vector3, UnitScript>();
+            Dictionary<Vector3Int, UnitScript> unitList = new Dictionary<Vector3Int, UnitScript>();
             unitList.Add(unitID, unit);
             _unitObjectsByPlayerID.Add(playerContID, unitList);
         }
@@ -133,7 +142,7 @@ public class UnitsManager : MonoBehaviour
 
     ////////////////////////////////////////////////
 
-    public static void SetUnitActive(bool onOff, int playerContID, Vector3 unitID)
+    public static void SetUnitActive(bool onOff, int playerContID, Vector3Int unitID)
     {
         UnitScript unit = _unitObjectsByPlayerID[playerContID][unitID];
 
@@ -155,8 +164,12 @@ public class UnitsManager : MonoBehaviour
                 _activeUnit.DeActivateUnit();
             }
 
+            _activeUnit.ClearPathFindingNodes();
             _activeUnit = unit;
             _activeUnit.ActivateUnit();
+            AssignCameraToActiveUnit();
+
+            Debug.Log("Unit: " + unitID + " : SetActive");
 
             // _locationManager.DebugTestPathFindingNodes(_activeUnit);
         }
@@ -179,30 +192,7 @@ public class UnitsManager : MonoBehaviour
     public static void AssignCameraToActiveUnit()
     {
         CameraManager.SetCamToOrbitUnit(_activeUnit);
-        LayerManager.ChangeCameraLayer(_activeUnit.CubeUnitIsOn);
-    }
-
-    ////////////////////////////////////////////////
-
-    public static void MakeActiveUnitMove_CLIENT(Vector3 posToMoveTo)
-    {
-        if (_activeUnit)
-        {
-            List<Vector3> movePath = MovementManager.SetUnitsPath(_activeUnit, _activeUnit.CubeUnitIsOn.CubeID, posToMoveTo);
-
-            //int[] pathInts = DataManipulation.ConvertVectorsIntoIntArray(movePath);
-
-            if (movePath != null)
-            {
-                //int unitID = (int)_activeUnit.netId.Value;
-                MovementManager.CreatePathFindingNodes_CLIENT(_activeUnit, _activeUnit.UnitID, movePath);
-
-                //PlayerManager.NetworkAgent.CmdTellServerToMoveUnit(PlayerManager.PlayerAgent.NetworkInstanceID, _activeUnit.NetID, pathInts);
-
-                _activeUnit.GetComponent<MovementScript>().MoveUnit(movePath);
-            }
-
-        }
+        //LayerManager.ChangeCameraLayer(_activeUnit.CubeUnitIsOn);
     }
 
     ////////////////////////////////////////////////

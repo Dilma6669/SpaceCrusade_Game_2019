@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class LayerManager : MonoBehaviour
 {
@@ -10,33 +11,33 @@ public class LayerManager : MonoBehaviour
     ////////////////////////////////////////////////
 
     // Layer INfo
-    private static int _startLayer;
-    private static int _maxLayer; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
-    private static int _minLayer;
-    private static int _currLayer;
+    //private static int _startLayer;
+    //private static int _maxLayer; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
+    //private static int _minLayer;
+    //private static int _currLayer;
 
     ////////////////////////////////////////////////
 
-    public static int LayerStart
-    {
-        get { return _startLayer; }
-        set { _startLayer = value; }
-    }
-    public static int LayerMax
-    {
-        get { return _maxLayer; }
-        set { _maxLayer = value; }
-    }
-    public static int LayerMin
-    {
-        get { return _minLayer; }
-        set { _minLayer = value; }
-    }
-    public static int LayerCurr
-    {
-        get { return _currLayer; }
-        set { _currLayer = value; }
-    }
+    //public static int LayerStart
+    //{
+    //    get { return _startLayer; }
+    //    set { _startLayer = value; }
+    //}
+    //public static int LayerMax
+    //{
+    //    get { return _maxLayer; }
+    //    set { _maxLayer = value; }
+    //}
+    //public static int LayerMin
+    //{
+    //    get { return _minLayer; }
+    //    set { _minLayer = value; }
+    //}
+    //public static int LayerCurr
+    //{
+    //    get { return _currLayer; }
+    //    set { _currLayer = value; }
+    //}
 
     ////////////////////////////////////////////////
 
@@ -47,9 +48,8 @@ public class LayerManager : MonoBehaviour
     static BaseNode parentNode;
     static int parentLayerID;
 
-
-    static int LAYERVISIBLE = 8;
-    static int LAYERNOTVISIBLE = 9;
+    public static int LAYER_IGNORE_RAYCAST = 2;
+    public static int LAYER_ENVIRONMENT = 8;
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
@@ -72,252 +72,342 @@ public class LayerManager : MonoBehaviour
         _layerNodeList = new Dictionary<int, List<BaseNode>>();
 
         // change layer callback event
-        UIManager.OnChangeLayerClick += ChangeCameraLayerByHUD;
+        //UIManager.OnChangeLayerClick += ChangeCameraLayerByHUD;
 
-        LayerCurr = -1;
+       // LayerCurr = -1;
     }
 
-    //////////////////
+    ////////////////////////////////////
+    ////////////////////////////////////
 
-    public static void ChangeCameraLayerByHUD(int change)
-    {
-        if (change == 1)
-        {
-            layerID++;
-            ChangeSpecificCubesVisibility(LAYERVISIBLE);
-        }
-        if (change == -1)
-        {
-            ChangeSpecificCubesVisibility(LAYERNOTVISIBLE);
-            layerID--;
-        }
-        LayerCurr = layerID;
-    }
+    //private static void AssignLayerToObject(GameObject obj, int visibilityLayer)
+    //{
+    //    obj.layer = visibilityLayer;
+
+    //    if (visibilityLayer == LAYERVISIBLE)
+    //    {
+    //        if (obj.GetComponent<MeshCollider>())
+    //            obj.GetComponent<MeshCollider>().enabled = true;
+
+    //        if (obj.GetComponent<MeshRenderer>())
+    //            obj.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.On;
+    //    }
+    //    else if (visibilityLayer == LAYERNOTVISIBLE)
+    //    {
+    //        if (obj.GetComponent<MeshCollider>())
+    //            obj.GetComponent<MeshCollider>().enabled = false;
+
+    //        if (obj.gameObject.GetComponent<MeshRenderer>())
+    //            obj.gameObject.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.ShadowsOnly;
+    //    }
+    //}
+
+    //////////////////////////////////////
+    //////////////////////////////////////
+
+    //public static void ChangeCameraLayerByHUD(int change)
+    //{
+    //    if (change == 1)
+    //    {
+    //        layerID++;
+    //        ChangeSpecificCubesVisibility(LAYERVISIBLE);
+    //    }
+    //    if (change == -1)
+    //    {
+    //        ChangeSpecificCubesVisibility(LAYERNOTVISIBLE);
+    //        layerID--;
+    //    }
+    //    LayerCurr = layerID;
+    //}
 
 
-    public static void ChangeCameraLayer(CubeLocationScript cubeScript)
-    {
-        BaseNode parentWorldNode = cubeScript.transform.parent.parent.GetComponent<BaseNode>();
-        BaseNode parentMapNode = cubeScript.transform.parent.GetComponent<BaseNode>();
+    //public static void ChangeCameraLayer(CubeLocationScript cubeScript)
+    //{
+    //    BaseNode parentWorldNode = cubeScript.transform.parent.parent.GetComponent<BaseNode>();
+    //    BaseNode parentMapNode = cubeScript.transform.parent.GetComponent<BaseNode>();
 
-        if (parentWorldNode.entrance)
-        {
-            parentNode = parentWorldNode;
-        }
-        else
-        {
-            parentNode = parentMapNode;
-        }
-        parentLayerID = parentNode.NodeLayerCount;
+    //    if (parentWorldNode.entrance)
+    //    {
+    //        parentNode = parentWorldNode;
+    //    }
+    //    else
+    //    {
+    //        parentNode = parentMapNode;
+    //    }
+    //    parentLayerID = parentNode.NodeLayerCount;
 
-        ChangeSpecificNodeVisibility(LAYERNOTVISIBLE); // set specfic world node to not visible, basicly clears all layers so correct layer can be set
+    //    ChangeSpecificNodeVisibility(LAYERNOTVISIBLE); // set specfic world node to not visible, basicly clears all layers so correct layer can be set
 
-        if (LayerCurr != -1)
-        {
-            //ChangeSpecificNodeVisibility(parentWorldNode, LAYERVISIBLE);
-            //ChangeSpecificCubesVisibility(parentWorldNode, LAYERNOTVISIBLE);
-        }
+    //    if (LayerCurr != -1)
+    //    {
+    //        //ChangeSpecificNodeVisibility(parentWorldNode, LAYERVISIBLE);
+    //        //ChangeSpecificCubesVisibility(parentWorldNode, LAYERNOTVISIBLE);
+    //    }
     
-        layerID = cubeScript.CubeLayerID;
+    //    layerID = cubeScript.CubeLayerID;
 
-        for (int i = parentLayerID; i <= cubeScript.CubeLayerID; i++)
-        {
-            layerID = i;
-            ChangeSpecificCubesVisibility(LAYERVISIBLE);
-        }
+    //    for (int i = parentLayerID; i <= cubeScript.CubeLayerID; i++)
+    //    {
+    //        layerID = i;
+    //        ChangeSpecificCubesVisibility(LAYERVISIBLE);
+    //    }
 
-        LayerCurr = layerID;
-
-
-        // for the units
-        UnitScript[] units = parentNode.GetComponentsInChildren<UnitScript>();
-        foreach (UnitScript unit in units)
-        {
-           AssignUnitToLayer(unit.gameObject);
-        }
-    }
+    //    LayerCurr = layerID;
 
 
+    //    // for the units
+    //    UnitScript[] units = parentNode.GetComponentsInChildren<UnitScript>();
+    //    foreach (UnitScript unit in units)
+    //    {
+    //       AssignUnitToLayer(unit.gameObject);
+    //    }
+    //}
 
-    public static void ChangeSpecificNodeVisibility(int visibilityLayer)
-    {
-        parentNode.gameObject.layer = visibilityLayer;
+    ////////////////////
 
-        List<GameObject> units = new List<GameObject>(); 
+    //public static void ChangeSpecificNodeVisibility(int visibilityLayer)
+    //{
+    //    AssignLayerToObject(parentNode.gameObject, visibilityLayer);
 
-        Transform[] allChildren = parentNode.GetComponentsInChildren<Transform>();
-        foreach (Transform child in allChildren)
-        {
-            child.gameObject.layer = visibilityLayer;
-        }
-    }
+    //    List<GameObject> units = new List<GameObject>(); 
 
-    public static void ChangeSpecificCubesVisibility(int visibilityLayer)
-    {
-        CubeLocationScript[] allChildren = parentNode.GetComponentsInChildren<CubeLocationScript>();
+    //    Transform[] allChildren = parentNode.GetComponentsInChildren<Transform>();
+    //    foreach (Transform child in allChildren)
+    //    {
+    //        AssignLayerToObject(child.gameObject, visibilityLayer);
+    //    }
+    //}
 
-        foreach (CubeLocationScript child in allChildren)
-        {
-            if (child.CubeLayerID == layerID)
-            {
-                child.gameObject.layer = visibilityLayer;
+    ////////////////////
 
-                Transform[] grandChildren = child.GetComponentsInChildren<Transform>();
-                foreach (Transform grand in grandChildren)
-                {
-                    grand.gameObject.layer = visibilityLayer;
-                }
-            }
-        }
-    }
+    //public static void ChangeSpecificCubesVisibility(int visibilityLayer)
+    //{
+    //    CubeLocationScript[] allChildren = parentNode.GetComponentsInChildren<CubeLocationScript>();
 
+    //    foreach (CubeLocationScript child in allChildren)
+    //    {
+    //        if (child.CubeLayerID == layerID)
+    //        {
+    //            AssignLayerToObject(child.gameObject, visibilityLayer);
 
-    //////////////////
+    //            Transform[] grandChildren = child.GetComponentsInChildren<Transform>();
+    //            foreach (Transform grand in grandChildren)
+    //            {
+    //                AssignLayerToObject(grand.gameObject, visibilityLayer);
+    //            }
+    //        }
+    //    }
+    //}
 
-    public static void AddCubeToLayer(CubeLocationScript script)
-    {
-        int cubeLayer = script.CubeLayerID;
-        if (_layerCubeList.ContainsKey(cubeLayer))
-        {
-            _layerCubeList[cubeLayer].Add(script);
-        }
-        else
-        {
-            _layerCubeList.Add(cubeLayer, new List<CubeLocationScript> { script });
-        }
-    }
+    ////////////////////
 
-    public static void ChangeCubeLayerVisibility(int layerID, int visibilityLayer)
-    {
-        if (_layerCubeList.ContainsKey(layerID))
-        {
-            List<CubeLocationScript> scripts = _layerCubeList[layerID];
+    //public static void AddCubeToLayer(CubeLocationScript script)
+    //{
+    //    int cubeLayer = script.CubeLayerID;
+    //    if (_layerCubeList.ContainsKey(cubeLayer))
+    //    {
+    //        _layerCubeList[cubeLayer].Add(script);
+    //    }
+    //    else
+    //    {
+    //        _layerCubeList.Add(cubeLayer, new List<CubeLocationScript> { script });
+    //    }
+    //}
 
-            foreach (CubeLocationScript script in scripts)
-            {
-                script.gameObject.layer = visibilityLayer;
+    //public static void ChangeCubeLayerVisibility(int layerID, int visibilityLayer)
+    //{
+    //    if (_layerCubeList.ContainsKey(layerID))
+    //    {
+    //        List<CubeLocationScript> scripts = _layerCubeList[layerID];
 
-                Transform[] allChildren = script.GetComponentsInChildren<Transform>();
-                foreach (Transform child in allChildren)
-                {
-                    child.gameObject.layer = visibilityLayer;
-                }
-            }
-        }
-        else
-        {
-            Debug.LogError("Got an issue here NO layerID assigned or not in list: " + layerID);
-        }
-    }
+    //        foreach (CubeLocationScript script in scripts)
+    //        {
+    //            AssignLayerToObject(script.gameObject, visibilityLayer);
 
-
-    public static void MakeAllCubeLayersVisible()
-    {
-        Debug.Log("MakeAllLayersVisible");
-        foreach (int layerID in _layerCubeList.Keys)
-        {
-            ChangeCubeLayerVisibility(layerID, LAYERVISIBLE);
-        }
-    }
-
-    public static void MakeAllCubeLayersNotVisible()
-    {
-        Debug.Log("MakeAllLayersNotVisible");
-        foreach (int layerID in _layerCubeList.Keys)
-        {
-            ChangeCubeLayerVisibility(layerID, LAYERNOTVISIBLE);
-        }
-    }
-
-    //////////////////
-
-    public static void AddNodeToLayer(BaseNode node)
-    {
-        int nodeLayer = node.NodeLayerCount;
-        if (_layerNodeList.ContainsKey(nodeLayer))
-        {
-            _layerNodeList[nodeLayer].Add(node);
-        }
-        else
-        {
-            _layerNodeList.Add(nodeLayer, new List<BaseNode> { node });
-        }
-    }
-
-    public static void ChangeNodeLayerVisibility(int layerID, int visibilityLayer)
-    {
-        if (_layerNodeList.ContainsKey(layerID))
-        {
-            List<BaseNode> nodes = _layerNodeList[layerID];
-
-            foreach (BaseNode node in nodes)
-            {
-                node.gameObject.layer = visibilityLayer;
-
-                Transform[] allChildren = node.GetComponentsInChildren<Transform>();
-                foreach (Transform child in allChildren)
-                {
-                    child.gameObject.layer = visibilityLayer;
-                }
-            }
-        }
-        else
-        {
-            Debug.LogError("Got an issue here NO layerID assigned or not in list: " + layerID);
-        }
-    }
-
-    public static void MakeAllNodeLayersVisible()
-    {
-        foreach (int layerID in _layerNodeList.Keys)
-        {
-            ChangeNodeLayerVisibility(layerID, LAYERVISIBLE);
-        }
-    }
-
-    public static void MakeAllNodeLayersNotVisible()
-    {
-        Debug.Log("MakeAllLayersNotVisible");
-        foreach (int layerID in _layerNodeList.Keys)
-        {
-            ChangeNodeLayerVisibility(layerID, LAYERNOTVISIBLE);
-        }
-    }
+    //            Transform[] allChildren = script.GetComponentsInChildren<Transform>();
+    //            foreach (Transform child in allChildren)
+    //            {
+    //                AssignLayerToObject(child.gameObject, visibilityLayer);
+    //            }
+    //        }
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("Got an issue here NO layerID assigned or not in list: " + layerID);
+    //    }
+    //}
 
 
-    //////////////////
+    //public static void MakeAllCubeLayersVisible()
+    //{
+    //    Debug.Log("MakeAllLayersVisible");
+    //    foreach (int layerID in _layerCubeList.Keys)
+    //    {
+    //        ChangeCubeLayerVisibility(layerID, LAYERVISIBLE);
+    //    }
+    //}
 
-    public static void AssignUnitToLayer(GameObject unit)
-    {
-        int playerID = PlayerManager.PlayerID;
-        int unitControllerID = unit.GetComponent<UnitScript>().PlayerControllerID;
+    //public static void MakeAllCubeLayersNotVisible()
+    //{
+    //    Debug.Log("MakeAllLayersNotVisible");
+    //    foreach (int layerID in _layerCubeList.Keys)
+    //    {
+    //        ChangeCubeLayerVisibility(layerID, LAYERNOTVISIBLE);
+    //    }
+    //}
 
-        //print("fuck AssignUnitToLayer playerID: " + playerID);
-        //print("fuck AssignUnitToLayer unitControllerID: " + unitControllerID);
+    ////////////////////
 
-        if (playerID == unitControllerID)
-        {
-            unit.layer = LAYERVISIBLE;
+    //public static void AddNodeToLayer(BaseNode node)
+    //{
+    //    int nodeLayer = node.NodeLayerCount;
+    //    if (_layerNodeList.ContainsKey(nodeLayer))
+    //    {
+    //        _layerNodeList[nodeLayer].Add(node);
+    //    }
+    //    else
+    //    {
+    //        _layerNodeList.Add(nodeLayer, new List<BaseNode> { node });
+    //    }
+    //}
 
-            Transform[] allChildren = unit.GetComponentsInChildren<Transform>();
-            foreach (Transform child in allChildren)
-            {
-                child.gameObject.layer = LAYERVISIBLE;
-            }
-        }
-        else
-        {
-            unit.layer = LAYERNOTVISIBLE;
+    //public static void ChangeNodeLayerVisibility(int layerID, int visibilityLayer)
+    //{
+    //    if (_layerNodeList.ContainsKey(layerID))
+    //    {
+    //        List<BaseNode> nodes = _layerNodeList[layerID];
 
-            Transform[] allChildren = unit.GetComponentsInChildren<Transform>();
-            foreach (Transform child in allChildren)
-            {
-                child.gameObject.layer = LAYERNOTVISIBLE;
-            }
-        }
-    }
+    //        foreach (BaseNode node in nodes)
+    //        {
+    //            AssignLayerToObject(node.gameObject, visibilityLayer);
+
+    //            Transform[] allChildren = node.GetComponentsInChildren<Transform>();
+    //            foreach (Transform child in allChildren)
+    //            {
+    //                AssignLayerToObject(child.gameObject, visibilityLayer);
+    //            }
+    //        }
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("Got an issue here NO layerID assigned or not in list: " + layerID);
+    //    }
+    //}
+
+    //public static void MakeAllNodeLayersVisible()
+    //{
+    //    foreach (int layerID in _layerNodeList.Keys)
+    //    {
+    //        ChangeNodeLayerVisibility(layerID, LAYERVISIBLE);
+    //    }
+    //}
+
+    //public static void MakeAllNodeLayersNotVisible()
+    //{
+    //    Debug.Log("MakeAllLayersNotVisible");
+    //    foreach (int layerID in _layerNodeList.Keys)
+    //    {
+    //        ChangeNodeLayerVisibility(layerID, LAYERNOTVISIBLE);
+    //    }
+    //}
 
 
+    ////////////////////
+
+    //public static void AssignUnitToLayer(GameObject unit)
+    //{
+    //    int playerID = PlayerManager.PlayerID;
+    //    int unitControllerID = unit.GetComponent<UnitScript>().PlayerControllerID;
+
+    //    //print("fuck AssignUnitToLayer playerID: " + playerID);
+    //    //print("fuck AssignUnitToLayer unitControllerID: " + unitControllerID);
+
+    //    if (playerID == unitControllerID)
+    //    {
+    //        AssignLayerToObject(unit, LAYERVISIBLE);
+
+    //        Transform[] allChildren = unit.GetComponentsInChildren<Transform>();
+    //        foreach (Transform child in allChildren)
+    //        {
+    //            AssignLayerToObject(child.gameObject, LAYERVISIBLE);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        AssignLayerToObject(unit, LAYERNOTVISIBLE);
+
+    //        Transform[] allChildren = unit.GetComponentsInChildren<Transform>();
+    //        foreach (Transform child in allChildren)
+    //        {
+    //            AssignLayerToObject(child.gameObject, LAYERNOTVISIBLE);
+    //        }
+    //    }
+    //}
+
+
+
+    //////////////////////////////////////////////
+    //////////////////////////////////////////////
+
+
+    //public static void AssignLayerCountsToWorldAndMapNodes(Dictionary<Vector3Int, WorldNode> worldNodes)
+    //{
+    //    int YAxisWorldNode = -1;
+    //    int YAxisMapNode = -1;
+
+    //    int mapLayerCounter = -1;
+    //    int worldLayerCounter = -1;
+    //    if (worldNodes.Count == 1)
+    //    {
+    //        foreach (WorldNode worldNode in worldNodes.Values)
+    //        {
+    //            worldNode.NodeLayerCount = 0; // worldNode Counter is the same as the most bottom map Node
+
+    //            foreach (MapNode mapNode in worldNode.mapNodes)
+    //            {
+    //                if (YAxisMapNode != mapNode.NodeID.y)
+    //                {
+    //                    YAxisMapNode = mapNode.NodeID.y;
+    //                    mapLayerCounter++;
+    //                }
+
+    //                mapNode.NodeLayerCount = mapLayerCounter;
+    //                AddNodeToLayer(mapNode);
+    //            }
+
+    //            AddNodeToLayer(worldNode);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        foreach (WorldNode worldNode in worldNodes.Values)
+    //        {
+    //            if (YAxisWorldNode != worldNode.NodeID.y)
+    //            {
+    //                YAxisWorldNode = worldNode.NodeID.y;
+    //                worldLayerCounter++;
+    //            }
+
+    //            worldNode.NodeLayerCount = worldLayerCounter * 3; // 3 is number layers in worldNode
+
+    //            mapLayerCounter = worldNode.NodeLayerCount;
+
+    //            foreach (MapNode mapNode in worldNode.mapNodes)
+    //            {
+    //                if (YAxisMapNode != mapNode.NodeID.y)
+    //                {
+    //                    YAxisMapNode = mapNode.NodeID.y;
+    //                    mapLayerCounter++;
+    //                }
+
+    //                mapNode.NodeLayerCount = worldNode.NodeLayerCount + mapLayerCounter;
+    //                AddNodeToLayer(mapNode);
+    //            }
+
+    //            AddNodeToLayer(worldNode);
+    //        }
+    //    }
+    //}
 
 
 

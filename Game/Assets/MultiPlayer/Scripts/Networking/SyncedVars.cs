@@ -53,7 +53,7 @@ public class SyncedVars : NetworkBehaviour
         //{
         //    for (int i = 0; i < 20; i++)
         //    {
-        //        _network_Nodes_Container.Add(new NetworkNodeStruct());
+        //        _network_Nodes_Container.Add(new WorldNodeStruct());
         //    }
         //}
     }

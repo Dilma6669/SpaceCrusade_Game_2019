@@ -6,10 +6,7 @@ public enum NodeTypes
     WorldNode,
     MapNode,
     ConnectorNode,
-    OuterNode,
-    PathFindingNode,
-    DockingNode,
-    NetworkNodeContainer
+    PathFindingNode
 }
 
 

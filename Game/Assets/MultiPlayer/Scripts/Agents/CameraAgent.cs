@@ -5,33 +5,45 @@ public class CameraAgent : NetworkBehaviour
 {
     ////////////////////////////////////////////////
 
-    public Transform _cameraPivot;
-    public Transform _cameraObject;
-    public Camera _camera;
-
-    [HideInInspector]
-    public CameraPivot _cameraPivotScript;
+    private Camera _camera;
+    private Transform _cameraContainer;
+    private CameraPivot _cameraPivot;
 
     ////////////////////////////////////////////////
 
-    private Transform _cameraPivotTransform;
-    private Transform cameraTransform;
+
+    public Camera MainCamera
+    {
+        get { return _camera; }
+        set { _camera = value; }
+    }
+
+    public Transform CameraContainer
+    {
+        get { return _cameraContainer; }
+        set { _cameraContainer = value; }
+    }
+
+    public CameraPivot Camera_Pivot
+    {
+        get { return _cameraPivot; }
+        set { _cameraPivot = value; }
+    }
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
 
     void Awake()
     {
-        _cameraPivot = transform.Find("CameraPivot");
-        if (_cameraPivot == null) { Debug.LogError("We got a problem here");}
+        Camera_Pivot = transform.FindDeepChild("CameraPivot").GetComponent<CameraPivot>();
+        if (Camera_Pivot == null) { Debug.LogError("We got a problem here");}
 
-        _cameraObject = transform.FindDeepChild("CameraObject");
-        if (_cameraObject == null) { Debug.LogError("We got a problem here");}
+        CameraContainer = Camera_Pivot.transform.Find("CameraObject");
+        if (CameraContainer == null) { Debug.LogError("We got a problem here");}
 
-        _camera = _cameraObject.GetComponent<Camera>();
+        MainCamera = CameraContainer.GetComponent<Camera>();
         if (_camera == null) { Debug.LogError("We got a problem here"); }
 
-        _cameraPivotScript = _cameraPivot.GetComponent<CameraPivot>();
         _camera.enabled = false;
     }
 
@@ -44,7 +56,21 @@ public class CameraAgent : NetworkBehaviour
         PlayerManager.CameraAgent = this;
     }
 
+    ////////////////////////////////////////////////
 
+    public void ChangeCameraState()
+    {
+        if(CameraPivot.CameraStateIsGlobal)
+        {
+            CameraPivot.CameraState = CameraPivot.CAMERA_STATE_LOCAL;
+        }
+        else
+        {
+            CameraPivot.CameraState = CameraPivot.CAMERA_STATE_GLOBAL;
+        }
+    }
+
+    ////////////////////////////////////////////////
 
     public void SetCamAgentToOrbitUnit(UnitScript unitScript)
     {
@@ -52,9 +78,9 @@ public class CameraAgent : NetworkBehaviour
 
         if (unitScript.PlayerPivot == null)
         {
-            print("ERROR UnitScript.PlayerPivot == null unitScript.NetID.Value: " + unitScript.UnitID);
+            Debug.LogError("ERROR UnitScript.PlayerPivot == null unitScript.NetID.Value: " + unitScript.UnitID);
         }
-        _cameraPivotScript.SetNewPivot(unitScript.PlayerPivot);
+        Camera_Pivot.SetNewPivot(unitScript.PlayerPivot);
     }
 
     ////////////////////////////////////////////////

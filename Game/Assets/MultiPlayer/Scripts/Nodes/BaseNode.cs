@@ -1,14 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class BaseNode : MonoBehaviour {
 
-    private Vector3 _nodeID;
+    private Vector3Int _nodeID;
     private NodeTypes _thisNodeType;
-    private Vector3 _nodeLocation;
-    private Vector3 _nodeRotation;
-    private int _nodeDirection;
-    private int _nodeSize;
-    private int _nodeLayerCount;
+
+    private BaseWorldNodeData _nodeData = new BaseWorldNodeData();
+    public int _nodeLayerCount;
     private MapPieceTypes _nodeMapPiece;
 
     private Vector3 _currLoc;
@@ -17,18 +16,16 @@ public class BaseNode : MonoBehaviour {
     private Vector3 _targetLoc;
     private Vector3 _targetRot;
 
-    public int[] neighbours;
+    private bool _spinny; // to spin with spinny ship parts
+
+    public List<Vector3Int> neighbourVects;
     public bool entrance = false;
 
-    public bool connectorUp = false;
-
-    public WorldNode worldNodeParent;
+    public WorldNode worldNodeParent; // not used but could come in handy
     public GameObject _nodeCover;
 
     private bool _moveNode = false;
     private bool _thisClientInControl = false;
-    private GameObject _networkNodeContainer;
-    private int _linkedNetworkNodeIndex;
 
     private float _thrust = 0f;
 
@@ -39,10 +36,10 @@ public class BaseNode : MonoBehaviour {
         get { return _thisNodeType; }
         set { _thisNodeType = value; }
     }
-    public int NodeSize
+    public BaseWorldNodeData NodeData
     {
-        get { return _nodeSize; }
-        set { _nodeSize = value; }
+        get { return _nodeData; }
+        set { _nodeData = value; }
     }
     public int NodeLayerCount
     {
@@ -55,23 +52,13 @@ public class BaseNode : MonoBehaviour {
         set { _nodeMapPiece = value; }
     }
 
-
-    public Vector3 NodeRotation
+    public bool Spinney
     {
-        get { return _nodeRotation; }
-        set { _nodeRotation = value; }
-    }
-    public Vector3 NodeLocation
-    {
-        get { return _nodeLocation; }
-        set { _nodeLocation = value; }
-    }
-    public int NodeDirection
-    {
-        get { return _nodeDirection; }
-        set { _nodeDirection = value; }
+        get { return _spinny; }
+        set { _spinny = value; }
     }
 
+    //////////////////////////////
 
     public GameObject NodeCover
     {
@@ -83,7 +70,7 @@ public class BaseNode : MonoBehaviour {
     //////////////////////////////
     /// Network shit
     //////////////////////////////
-    public Vector3 NetworkNodeID
+    public Vector3Int NodeID
     {
         get { return _nodeID; }
         set { _nodeID = value; }
@@ -130,18 +117,18 @@ public class BaseNode : MonoBehaviour {
             _thrust = 10f;
 
             // Moving
-            //transform.position = Vector3.MoveTowards(transform.position, TargetLoc, _thrust);
+            //transform.position = Vector3Int.MoveTowards(transform.position, TargetLoc, _thrust);
 
             //// Rotation
-            //Vector3 eulerRotation = new Vector3(transform.eulerAngles.x, TargetLoc.y, transform.eulerAngles.z);
+            //Vector3Int eulerRotation = new Vector3Int(transform.eulerAngles.x, TargetLoc.y, transform.eulerAngles.z);
             //transform.rotation = Quaternion.Euler(eulerRotation);
 
             // Rotation
-            //Vector3 newDir = Vector3.RotateTowards(transform.forward, eulerRotation, (Time.deltaTime * 2f) * 5f, 0.0f);
+            //Vector3Int newDir = Vector3Int.RotateTowards(transform.forward, eulerRotation, (Time.deltaTime * 2f) * 5f, 0.0f);
             //transform.rotation = Quaternion.LookRotation(newDir);
 
             // Moving
-            //transform.position = Vector3.MoveTowards(transform.position, TargetLoc, (Time.deltaTime * _thrust));
+            //transform.position = Vector3Int.MoveTowards(transform.position, TargetLoc, (Time.deltaTime * _thrust));
 
 
             // UMM THIS IS WORKING REALLY FICKEING WELL
@@ -160,7 +147,7 @@ public class BaseNode : MonoBehaviour {
                 {
                     NodeLoc = transform.position;
                     NodeRot = transform.eulerAngles;
-                    PlayerManager.NetworkAgent.CmdTellServerToUpdateWorldNodePosition(PlayerManager.PlayerAgent.NetworkInstanceID, NetworkNodeID, NodeLoc, NodeRot);
+                    PlayerManager.NetworkAgent.CmdTellServerToUpdateWorldNodePosition(PlayerManager.PlayerAgent.NetworkInstanceID, NodeID, NodeLoc, NodeRot);
                 }
             }
         }

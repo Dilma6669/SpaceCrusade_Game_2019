@@ -28,51 +28,46 @@ public class PlayerShipBuilder : MonoBehaviour
 
     ////////////////////////////////////////////////
     ////////////////////////////////////////////////
-    public static void CreatePlayerShip(NetworkNodeStruct networkNodeStruct, int playerID)
+    public static void CreatePlayerShip(NetworkNodeStruct nodeStruct, int playerID)
     {
-        MapPieceStruct mapData = new MapPieceStruct()
+        Vector3Int nodeID = new Vector3Int(Mathf.FloorToInt(nodeStruct.NodeID.x), Mathf.FloorToInt(nodeStruct.NodeID.y), Mathf.FloorToInt(nodeStruct.NodeID.z));
+
+        WorldNodeStruct worldNodeData = new WorldNodeStruct()
         {
-            mapPiece = MapPieceTypes.MapPiece_Corridor_01,
-            nodeType = NodeTypes.WorldNode,
-            location = networkNodeStruct.CurrLoc,
-            rotation = networkNodeStruct.CurrRot,
-            direction = 0,
-            parentNode = WorldManager._WorldContainer.transform
+            NodeID = nodeID,
+            CurrLoc = new Vector3Int(Mathf.FloorToInt(nodeStruct.CurrLoc.x), Mathf.FloorToInt(nodeStruct.CurrLoc.y), Mathf.FloorToInt(nodeStruct.CurrLoc.z)),
+            CurrRot = new Vector3Int(Mathf.FloorToInt(nodeStruct.CurrRot.x), Mathf.FloorToInt(nodeStruct.CurrRot.y), Mathf.FloorToInt(nodeStruct.CurrRot.z)),
         };
 
-        WorldNode worldNode = WorldBuilder._nodeBuilder.CreateNode<WorldNode>(mapData);
+        WorldNode worldNode = WorldBuilder._nodeBuilder.CreateWorldNode(worldNodeData);
 
-        LocationManager.SaveNodeTo_CLIENT(networkNodeStruct.NodeID, worldNode);
+        LocationManager.SaveNodeTo_CLIENT(nodeID, worldNode);
 
         BasePlayerData playerData = PlayerManager.GetPlayerData(playerID);
 
-        Debug.Log("fuck worldNode >>>>> " + worldNode.transform.position);
+        worldNode.transform.eulerAngles = new Vector3Int(0, 90, 0);
 
-        worldNode.transform.eulerAngles = new Vector3(0, 90, 0);
+        worldNode.NodeData.worldNodeMapPieces = playerData.shipMapPieces;
 
-        Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes = MapNodeBuilder.CreateMapNodes(new List<WorldNode>() { worldNode }, true, playerData.shipSize, playerData.shipMapPieces);
+        MapNodeBuilder.CreateMapNodesForWorldNode(worldNode);
+
+        Dictionary<Vector3Int, WorldNode> dict = new Dictionary<Vector3Int, WorldNode>();
+        dict.Add(nodeID, worldNode);
+        //LayerManager.AssignLayerCountsToWorldAndMapNodes(dict);
 
         //if (playerID == PlayerManager.PlayerID)
         //{
-            foreach (KeyValuePair<WorldNode, List<MapNode>> element in worldNodeAndWrapperNodes)
-            {
-                List<MapNode> mapNodes = element.Value;
-
-                foreach (MapNode mapNode in mapNodes)
-                {
-                    mapNode.ActivateMapPiece(true);
-                }
-            }
+        foreach (MapNode mapNode in worldNode.mapNodes)
+        {
+            mapNode.ActivateMapPiece(true);
+        }
         //}
-
-        //worldNode.transform.SetParent(networkNode.transform);
-        //worldNode.transform.position = networkNode.transform.position;
-        //worldNode.transform.localEulerAngles = new Vector3(0, 0, 0);
-        worldNode.GetComponent<WorldNode>().NetworkNodeID = networkNodeStruct.NodeID;
 
         if (playerData.playerID == PlayerManager.PlayerID)
         {
-            MoveShip(playerData, worldNode);
+           MoveShip(playerData, worldNode);
+
+            worldNode.transform.Find("RotationalNode").GetComponent<RotationalNode>()._rotate = true;
             PlayerManager.PlayersShipLoaded();
         }
     }
@@ -80,11 +75,12 @@ public class PlayerShipBuilder : MonoBehaviour
 
     public static void MoveShip(BasePlayerData playerData, WorldNode worldNode)
     {
-        Vector3 testLocVect = PlayerManager.GetTESTShipMovementPositions(playerData.playerID);
-        Vector3 testRotVect = Vector3.zero;
-        float thrust = 5;
+        Vector3Int testLocVect = PlayerManager.GetTESTShipMovementPositions(playerData.playerID);
+        Vector3Int testRotVect = Vector3Int.zero;
+        //float thrust = 50;
 
         worldNode.MakeNodeMoveToLoc(testLocVect, testRotVect, true);
+
     }
 
 }

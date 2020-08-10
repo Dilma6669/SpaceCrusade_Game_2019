@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4204610801279112}
   - component: {fileID: 114277419921235924}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: DefaultCube 00
   m_TagString: Cube
   m_Icon: {fileID: 0}
@@ -48,6 +48,9 @@ MonoBehaviour:
   _cubePlatform: 0
   _cubeIsSlope: 0
   _cubeIsPanel: 0
+  _platform_Panel_Cube: {fileID: 0}
+  _cubeIsHalfScriptPretendingToBeFullForSlopes: 0
+  _cubeOccupied: 0
   _isHumanWalkable: 0
   _isHumanClimbable: 0
   _isHumanJumpable: 0
@@ -66,3 +69,5 @@ MonoBehaviour:
   _neighVects: []
   _neighHalfVects: []
   _neighboursSet: 0
+  _movementOffset_Left: {x: 0, y: 0, z: 0}
+  _movementOffset_Right: {x: 0, y: 0, z: 0}

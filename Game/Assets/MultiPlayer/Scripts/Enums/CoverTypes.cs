@@ -3,7 +3,8 @@
     NormalCover,
     OpenCover,
     LargeGarageCover,
-    ConnectorCover
+    ConnectorCover,
+    ConnectorUPCover
 }
 
 

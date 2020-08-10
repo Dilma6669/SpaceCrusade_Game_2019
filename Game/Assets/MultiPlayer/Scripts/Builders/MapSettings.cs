@@ -31,29 +31,49 @@ public class MapSettings : MonoBehaviour {
 
     //////////////////////////////
 
-    private static int _sizeOfMapPiecesXZ = 29; // 24
-    public static int sizeOfMapPiecesXZ { get { return _sizeOfMapPiecesXZ; } }
+    private static int _mapPiecePanelCountXZ = 15;
+    public static int MapPiecePanelCountXZ { get { return _mapPiecePanelCountXZ; } } // How many floor panels in the X and Z axis
 
-    private static int _sizeOfMapPiecesY = 9; // 6
-    public static int sizeOfMapPiecesY { get { return _sizeOfMapPiecesY; } }
+    private static int _mapPiecePanelCountY = 15;
+    public static int MapPiecePanelCountY { get { return _mapPiecePanelCountY; } } // How many floor panels in the Y axis
 
-    //private static int _sizeOfMapVentsY = 2; // 2
-    //public static int sizeOfMapVentsY { get { return _sizeOfMapVentsY; }}
+    private static int _connectorPiecePanelCountX = 3;
+    public static int ConnectorPiecePanelCountX { get { return _connectorPiecePanelCountX; } } // The width of a connector piece panel count
 
+    private static int _connectorPiecePanelCountZ = MapPiecePanelCountXZ;
+    public static int ConnectorPiecePanelCountZ { get { return _connectorPiecePanelCountZ; } } // The Length of a connector piece panel count
 
+    private static int _connectorPiecePanelCountY = MapPiecePanelCountY;
+    public static int ConnectorPiecePanelCountY { get { return _connectorPiecePanelCountY; } } // The Height of a connector piece panel count
 
+    //////////////////////////////
 
-    private static int _worldNodeDistanceXZ = 2; // 1 less than max map size. Space inbetween nodes. needs a +1 to get new location
-    public static int worldNodeDistanceXZ { get { return _worldNodeDistanceXZ; } }
+    private static int _nodeCountOfMapPiecesXZ = (MapPiecePanelCountXZ * 2) + 1; // 31 (Need an overlap of +1) <<important LEAVE
+    public static int NodeCountOfMapPiecesXZ { get { return _nodeCountOfMapPiecesXZ; } }  // How many (loc nodes + loc half nodes) in X + Z Axis
 
-    private static int _worldNodeDistanceY = 2; // Space inbetween nodes. needs a +1 to get new location
-    public static int worldNodeDistanceY { get { return _worldNodeDistanceY; } }
+    private static int _nodeCountOfMapPiecesY = (MapPiecePanelCountY * 2) + 1; // 31 (Need an overlap of +1) <<important LEAVE
+    public static int NodeCountOfMapPiecesY { get { return _nodeCountOfMapPiecesY; } } // How many (loc nodes + loc half nodes) in Y Axis
 
+    //////////////////////////////
 
+    private static int _mapNodeCountDistanceXZ = (MapPiecePanelCountXZ * 2); // 30 (Doesnt need an overlap)
+    public static int MapNodeCountDistanceXZ { get { return _mapNodeCountDistanceXZ; } } // How many (loc nodes + loc half nodes) in-between X + Z axis MapNodes
 
+    private static int _mapNodeCountDistanceY = (MapPiecePanelCountY * 2); // 30 (Doesnt need an overlap)
+    public static int MapNodeCountDistanceY { get { return _mapNodeCountDistanceY; } }  // How many (loc nodes + loc half nodes) in-between Y axis MapNodes
 
-    private static int _worldPadding = -20; // 10 * 24 = nodes start at X : 240
-    public static int worldPadding { get { return _worldPadding; } }
+    //////////////////////////////
+
+    private static int _mapPiecesAroundWorldNode = 3; // 1
+    public static int MapPiecesAroundWorldNode { get { return _mapPiecesAroundWorldNode; } }
+
+    private static int _worldNodeCountDistanceXZ = (MapNodeCountDistanceXZ * MapPiecesAroundWorldNode); // 90
+    public static int WorldNodeCountDistanceXZ { get { return _worldNodeCountDistanceXZ; } }
+
+    private static int _worldNodeCountDistanceY = (MapNodeCountDistanceY * MapPiecesAroundWorldNode); // 90
+    public static int WorldNodeCountDistanceY { get { return _worldNodeCountDistanceY; } }
+
+    //////////////////////////////
 
     private static int _sizeOfCubes = 1; // 1
     public static int sizeOfCube { get { return _sizeOfCubes; } }
